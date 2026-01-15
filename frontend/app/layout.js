@@ -27,7 +27,7 @@ export default function RootLayout({ children }) {
         className={`${geistSans.variable} ${geistMono.variable} antialiased flex bg-gray-50`}
       >
         <Sidebar />
-        <main className="flex-1 h-screen overflow-y-auto w-full">
+        <main className="flex-1 min-h-full bg-white overflow-y-auto w-full">
           {children}
         </main>
       </body>
