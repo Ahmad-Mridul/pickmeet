@@ -12,7 +12,7 @@ const PickAndDrop = () => {
             title: "Add Card-Holder",
             description: "Register a new card holder for Pick & Drop services.",
             icon: CreditCard,
-            href: "/pick-drop/card-holder",
+            href: "/pick-drop/all-holders/card-holder",
             color: "text-blue-600",
             bg: "bg-blue-50",
             hover: "hover:shadow-blue-200"

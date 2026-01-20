@@ -40,6 +40,7 @@ import CloseIcon from "@mui/icons-material/Close"
 // Lucide-react Icon (used in table)
 import { useRouter } from "next/navigation"
 import { ViewIcon } from "lucide-react"
+import Link from "next/link"
 
 // Zod schema duplicated/adapted for Edit Modal
 const merchantFormSchema = z.object({
@@ -72,7 +73,7 @@ export default function ExistingMerchants({ refreshTrigger }) {
         const fetchMerchants = async () => {
             try {
                 // console.log("Fetching merchants from API...");
-                const response = await fetch("https://api.reward.smartemi.info/merchants")
+                const response = await fetch("http://localhost:5000/merchants")
                 if (!response.ok) throw new Error("Failed to fetch merchants")
                 const data = await response.json()
                 setMerchants(data)
@@ -159,8 +160,12 @@ function MerchantsTable({ merchants, onEdit, onDelete }) {
     })
 
     return (
-        <div className="w-full" sx={{ borderRadius: 3, boxShadow: 6 }}>
-            <CardHeader title={<Typography variant="h6" fontWeight="bold" sx={{ color: '#333' }}>Existing Merchants</Typography>} />
+        <div sx={{ borderRadius: 3, boxShadow: 6 }} className="p-5">
+            {/* <CardHeader title={<Typography variant="h6" fontWeight="bold" sx={{ color: '#333' }}>Existing Merchants</Typography>} /> */}
+            <div className="flex justify-between items-center p-5">
+                <p className="text-lg font-semibold text-black">Existing Merchants</p>
+                <Link href="/pick-drop/all-merchants/merchant" className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Add New Merchant</Link>
+            </div>
             <Box sx={{ px: 3, pb: 2 }}>
                 <TextField
                     fullWidth
@@ -216,7 +221,7 @@ function MerchantsTable({ merchants, onEdit, onDelete }) {
                                                 <IconButton
                                                     size="small"
                                                     aria-label="view"
-                                                    onClick={() => router.push(`/merchants/${merchant.id}`)}
+                                                    onClick={() => router.push(`/pick-drop/all-merchants/merchant/${merchant.id}`)}
                                                     sx={{ color: 'primary.main' }}
                                                 >
                                                     <ViewIcon size={18} />

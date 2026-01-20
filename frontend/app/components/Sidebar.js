@@ -18,8 +18,8 @@ export default function Sidebar() {
             icon: MapPin,
             href: "/pick-drop",
             children: [
-                { name: "Card Holder", href: "/pick-drop/card-holder" },
-                { name: "Merchant", href: "/pick-drop/merchant" },
+                { name: "Card Holder", href: "/pick-drop/all-holders" },
+                { name: "Merchant", href: "/pick-drop/all-merchants" },
                 { name: "Service Ticket", href: "/pick-drop/service-ticket" },
             ]
         },

@@ -5,59 +5,67 @@ import Link from "next/link";
 import { useState } from "react";
 
 export default function CardHolder() {
-    const [customerID, setCustomerID] = useState("");
+    const [clientID, setClientID] = useState("");
     const [name, setName] = useState("");
     const [mobile, setMobile] = useState("");
+    const [card_number, setCardNumber] = useState("");
+    const [card_type, setCardType] = useState("");
+    const [service_limit, setServiceLimit] = useState(0);
     const [email, setEmail] = useState("");
     const [address, setAddress] = useState("");
-    const [card_number, setCardNumber] = useState("");
 
     const [isLoading, setIsLoading] = useState(false);
     const [refreshKey, setRefreshKey] = useState(0);
 
     const handleSaveHolder = async (e) => {
         e.preventDefault();
-
+        if (card_type === "platinum") {
+            setServiceLimit(6);
+        }
         // Basic validation
-        if (!customerID || !name || !mobile || !card_number) {
+        if (!clientID || !name || !mobile || !card_number) {
             alert("Please fill in all required fields (ID, Name, Mobile, Card Number)");
             return;
         }
 
         setIsLoading(true);
 
-        const cardHolder = {
-            customerID: Number(customerID), // API expects Number
-            name,
-            mobile, // Keep as String to preserve leading zeros
-            email,
-            address,
-            card_number,
-            role: "customer"
-        };
+        // const cardHolder = {
+        //     clientID: Number(clientID), // API expects Number
+        //     name,
+        //     mobile,
+        //     card_number,
+        //     card_type,
+        //     email,
+        //     address,
+        //     role: "customer"
+        // };
+        // const user = {
+        //     email: cardHolder.email,
+        //     password: "N/A",
+        //     role: "customer",
+        // }
+        // console.log("HI", user);
 
         try {
-            console.log("Submitting payload:", cardHolder);
-            const response = await fetch("https://api.reward.smartemi.info/register/card-holder", {
+            const payload = {
+                // Card Holder data
+                clientID: Number(clientID), name, mobile, card_number, card_type, service_limit, email, address,
+                // User data
+                password: "N/A", role: "customer"
+            };
+
+            const response = await fetch("http://localhost:5000/register/user-holder", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(cardHolder),
+                body: JSON.stringify(payload),
             });
 
-            // Check content type to prevent JSON parse error on HTML error pages
-            const contentType = response.headers.get("content-type");
-            let data;
-            if (contentType && contentType.indexOf("application/json") !== -1) {
-                data = await response.json();
-            } else {
-                const text = await response.text();
-                data = { message: text };
-            }
 
             if (response.ok) {
-                alert("Card holder registered successfully!");
+                // alert("Card holder registered successfully!");
                 // Reset form
-                setCustomerID("");
+                setClientID("");
                 setName("");
                 setMobile("");
                 setEmail("");
@@ -65,18 +73,6 @@ export default function CardHolder() {
                 setCardNumber("");
                 // Refresh the list
                 setRefreshKey(prev => prev + 1);
-            } else {
-                console.error("Registration failed:", data);
-                // Construct a more detailed error message
-                let errorMsg = "Failed to register card holder.";
-                if (data && typeof data === 'object') {
-                    if (data.message) errorMsg += `\nReason: ${data.message}`;
-                    if (data.error) errorMsg += `\nError: ${data.error}`;
-                    if (!data.message && !data.error) errorMsg += `\nDetails: ${JSON.stringify(data)}`;
-                } else {
-                    errorMsg += `\nResponse: ${String(data)}`;
-                }
-                alert(errorMsg);
             }
         } catch (error) {
             console.error("Error submitting form:", error);
@@ -84,6 +80,7 @@ export default function CardHolder() {
         } finally {
             setIsLoading(false);
         }
+
     }
 
     return (
@@ -95,7 +92,7 @@ export default function CardHolder() {
                     <h1 className="text-2xl font-bold text-gray-800">Manage Card Holders</h1>
                 </div>
                 <div>
-                    <Link href="/pick-drop/card-holder/all-holders" className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                    <Link href="/pick-drop/all-holders" className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
                         View All Card Holders
                     </Link>
                 </div>
@@ -126,9 +123,9 @@ export default function CardHolder() {
                                 <label className="text-sm font-medium text-gray-700">Card Holder ID <span className="text-red-500">*</span></label>
                                 <input
                                     type="text"
-                                    name="customerID"
-                                    value={customerID}
-                                    onChange={(e) => setCustomerID(e.target.value)}
+                                    name="clientID"
+                                    value={clientID}
+                                    onChange={(e) => setClientID(e.target.value)}
                                     placeholder="e.g. 123456"
                                     className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-gray-400 text-gray-700"
                                     required
@@ -146,6 +143,8 @@ export default function CardHolder() {
                                     required
                                 />
                             </div>
+
+
                             <div className="space-y-1">
                                 <label className="text-sm font-medium text-gray-700">Card Number <span className="text-red-500">*</span></label>
                                 <input
@@ -157,6 +156,19 @@ export default function CardHolder() {
                                     className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-gray-400 text-gray-700"
                                     required
                                 />
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-sm font-medium text-gray-700">Card Type <span className="text-red-500">*</span></label>
+                                <select
+                                    name="card_type"
+                                    value={card_type}
+                                    onChange={(e) => setCardType(e.target.value)}
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-gray-400 text-gray-700"
+                                    required
+                                >
+                                    <option value="">Select Card Type</option>
+                                    <option value="platinum">Platinum</option>
+                                </select>
                             </div>
                             <div className="space-y-1">
                                 <label className="text-sm font-medium text-gray-700">Mobile Number <span className="text-red-500">*</span></label>

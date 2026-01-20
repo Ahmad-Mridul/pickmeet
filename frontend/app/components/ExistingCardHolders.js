@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { Search, ChevronLeft, ChevronRight, SquarePen } from "lucide-react";
+import { Search, ChevronLeft, ChevronRight, SquarePen, View } from "lucide-react";
 import Link from "next/link";
 
 export default function ExistingCardHolders() {
@@ -62,8 +62,8 @@ export default function ExistingCardHolders() {
 
     return (
         <div>
-            <div className="mb-5">
-                <Link href="/pick-drop/card-holder" className="shadow-lg bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+            <div className="mb-5 flex justify-end">
+                <Link href="/pick-drop/all-holders/card-holder" className="shadow-lg bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
                     Add Card-holder
                 </Link>
             </div>
@@ -99,6 +99,7 @@ export default function ExistingCardHolders() {
                                 <th className="px-6 py-4 border-b border-gray-100">Mobile</th>
                                 <th className="px-6 py-4 border-b border-gray-100">Email</th>
                                 <th className="px-6 py-4 border-b border-gray-100">Card Number</th>
+                                <th className="px-6 py-4 border-b border-gray-100">Actions</th>
                             </tr>
                         </thead>
                         <tbody className="text-gray-700 text-sm">
@@ -111,7 +112,12 @@ export default function ExistingCardHolders() {
                                             <td className="px-6 py-4 font-semibold text-gray-800">{data.name}</td>
                                             <td className="px-6 py-4 text-gray-600">{data.mobile}</td>
                                             <td className="px-6 py-4 text-gray-600">{data.email}</td>
-                                            <td className="px-6 py-4 font-mono text-gray-600 tracking-wide">{data.card}</td>
+                                            <td className="px-6 py-4 font-mono text-gray-600 ">{data.card}</td>
+                                            <td className="px-6 py-4 flex items-center justify-center">
+                                                <Link href={`/pick-drop/all-holders/${data.id}`}>
+                                                    <View size={20} className="text-blue-600" />
+                                                </Link>
+                                            </td>
                                         </tr>
                                     );
                                 })

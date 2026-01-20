@@ -61,12 +61,12 @@ export default function MerchantForm({ onMerchantAdded }) {
             mobile: "",
             email: "",
             password: "",
-            account_number: "N/A",
+            account_number: "",
             store_details: "",
-            account_name: "N/A",
-            branch_name: "N/A",
-            routing_number: "N/A",
-            payment_method: "N/A",
+            account_name: "",
+            branch_name: "",
+            routing_number: "",
+            payment_method: "",
             officer_name: "",
             officer_nickname: "",
             officer_mobile: "",
@@ -88,11 +88,24 @@ export default function MerchantForm({ onMerchantAdded }) {
         ];
 
         merchantFields.forEach((key) => {
-            if (values[key]) formData.append(key, values[key])
+            if (values[key] !== undefined && values[key] !== null) {
+                formData.append(key, values[key])
+            }
         })
 
+        // Append Role
+        formData.append("role", "merchant");
+
+        // Map and Append Communication Officer Fields
+        if (values.officer_name !== undefined) formData.append("co_name", values.officer_name);
+        if (values.officer_nickname !== undefined) formData.append("co_nickname", values.officer_nickname);
+        if (values.officer_mobile !== undefined) formData.append("co_mobile", values.officer_mobile);
+        if (values.officer_email !== undefined) formData.append("co_email", values.officer_email);
+        if (values.officer_telephone !== undefined) formData.append("co_telephone", values.officer_telephone);
+        if (values.officer_extension !== undefined) formData.append("co_extension", values.officer_extension);
+
         if (agreementFile) {
-            formData.append("agreement_paper", agreementFile)
+            formData.append("agreement_url", agreementFile)
         }
 
         try {
@@ -102,7 +115,7 @@ export default function MerchantForm({ onMerchantAdded }) {
             }
 
             // 1. Register Merchant
-            const response = await fetch("https://api.reward.smartemi.info/register/merchant", {
+            const response = await fetch("http://localhost:5000/register/merchant", {
                 method: "POST",
                 body: formData,
             })
@@ -122,29 +135,6 @@ export default function MerchantForm({ onMerchantAdded }) {
 
             const merchantResult = await response.json()
 
-            // 2. Register Communication Officer (if name provided)
-            if (values.officer_name) {
-                const officerData = {
-                    merchantId: merchantResult.id,
-                    name: values.officer_name,
-                    nickname: values.officer_nickname,
-                    mobile: values.officer_mobile,
-                    email: values.officer_email,
-                    telephone: values.officer_telephone,
-                    telephone_extension: values.officer_extension
-                };
-
-                const officerResponse = await fetch("https://api.reward.smartemi.info/register/communication-officer", {
-                    method: "POST",
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(officerData)
-                });
-
-                if (!officerResponse.ok) {
-                    console.error("Failed to register communication officer");
-                    toast.warning("Merchant created, but Communication Officer failed.");
-                }
-            }
 
             if (onMerchantAdded) {
                 onMerchantAdded(merchantResult)
