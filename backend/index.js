@@ -102,9 +102,12 @@ app.get("/pick-drop/all-holders/:id", async (req, res) => {
     });
     res.send(cardHolder);
 });
-app.post("/register/user-holder", async (req, res) => {
+app.post("/register/card-holder", async (req, res) => {
     const { clientID, name, mobile, card_number, card_type, service_limit, email, address, password, role } = req.body;
     console.log(service_limit);
+    if (card_type === "platinum") {
+        service_limit = 6;
+    }
     try {
         const result = await prisma.$transaction(async (tx) => {
             const newUser = await tx.user.create({

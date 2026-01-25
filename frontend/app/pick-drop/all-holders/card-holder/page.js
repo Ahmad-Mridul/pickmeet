@@ -55,7 +55,7 @@ export default function CardHolder() {
                 password: "N/A", role: "customer"
             };
 
-            const response = await fetch("http://localhost:5000/register/user-holder", {
+            const response = await fetch("http://localhost:5000/register/card-holder", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload),
