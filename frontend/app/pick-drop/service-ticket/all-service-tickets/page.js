@@ -117,14 +117,11 @@ export default function AllServiceTickets() {
         const fetchTickets = async () => {
             try {
                 setLoadingTickets(true);
-                // TODO: Replace with actual API call
-                // const response = await fetch("https://api.reward.smartemi.info/service-tickets");
-                // if (!response.ok) throw new Error("Failed to fetch tickets");
-                // const data = await response.json();
-                // setTickets(data);
-                
-                setTickets(mockTickets);
-                setFilteredTickets(mockTickets);
+                const response = await fetch("http://localhost:5000/pick-drop/service-tickets");
+                if (!response.ok) throw new Error("Failed to fetch tickets");
+                const data = await response.json();
+                setTickets(data);
+                setFilteredTickets(data);
             } catch (err) {
                 toast.error("Error loading tickets", {
                     description: err.message,
@@ -135,14 +132,14 @@ export default function AllServiceTickets() {
         };
         fetchTickets();
     }, []);
-
+    console.log("All tickets: ", tickets);
     // Handle search
     useEffect(() => {
         const filtered = tickets.filter(
             (ticket) =>
-                ticket.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                ticket.cardHolderName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                ticket.merchantName.toLowerCase().includes(searchTerm.toLowerCase())
+                ticket?.id ||
+                ticket?.cardHolder?.name ||
+                ticket?.merchant?.name
         );
         setFilteredTickets(filtered);
     }, [searchTerm, tickets]);
@@ -270,10 +267,8 @@ export default function AllServiceTickets() {
                                 <TableCell sx={{ fontWeight: "bold", color: "#333" }}>
                                     Merchant
                                 </TableCell>
-                                <TableCell sx={{ fontWeight: "bold", color: "#333" }}>
-                                    Service
-                                </TableCell>
-                                
+
+
                                 <TableCell sx={{ fontWeight: "bold", color: "#333" }}>
                                     Status
                                 </TableCell>
@@ -286,8 +281,8 @@ export default function AllServiceTickets() {
                             </TableRow>
                         </TableHead>
                         <TableBody>
-                            {filteredTickets.length > 0 ? (
-                                filteredTickets.map((ticket) => (
+                            {tickets.length > 0 ? (
+                                tickets.map((ticket) => (
                                     <TableRow
                                         key={ticket.id}
                                         sx={{
@@ -296,11 +291,11 @@ export default function AllServiceTickets() {
                                         }}
                                     >
                                         <TableCell sx={{ fontWeight: 600, color: "#667eea" }}>
-                                            {ticket.id}
+                                            {ticket?.id}
                                         </TableCell>
-                                        <TableCell>{ticket.cardHolderName}</TableCell>
-                                        <TableCell>{ticket.merchantName}</TableCell>
-                                        <TableCell>{ticket.serviceName}</TableCell>
+                                        <TableCell>{ticket?.cardHolder?.name}</TableCell>
+                                        <TableCell>{ticket?.merchant?.name}</TableCell>
+                                        {/* <TableCell>{ticket?.serviceName}</TableCell> */}
                                         {/* <TableCell align="right" sx={{ fontWeight: 600 }}>
                                             ${ticket.serviceCharge.toFixed(2)}
                                         </TableCell> */}
@@ -436,7 +431,7 @@ export default function AllServiceTickets() {
                                         <TextField
                                             size="small"
                                             label="Service Charge"
-                                            value={`$${selectedTicket.serviceCharge.toFixed(2)}`}
+                                            value={selectedTicket.serviceCharge}
                                             fullWidth
                                             disabled
                                         />
@@ -509,8 +504,8 @@ export default function AllServiceTickets() {
                                                 selectedTicket.paymentStatus === "prepaid"
                                                     ? "Pre-paid"
                                                     : selectedTicket.paymentStatus === "pay-on-pickup"
-                                                    ? "Pay on Pickup"
-                                                    : "Bill to Card"
+                                                        ? "Pay on Pickup"
+                                                        : "Bill to Card"
                                             }
                                             fullWidth
                                             disabled

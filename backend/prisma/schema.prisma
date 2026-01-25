@@ -36,6 +36,7 @@ model CardHolder {
   createdAt   DateTime @default(now())
   userId      Int
   user        User     @relation(fields: [userId], references: [id])
+  serviceTicket ServiceTicket[]
 }
 
 model Merchant {
@@ -44,10 +45,11 @@ model Merchant {
   mobile String
   address String
   payment_method String
+  service_charge String?
   account_name String
   branch_name String
-  routing_number Int
-  account_number Int
+  routing_number String
+  account_number String
   agreement_url String
   co_name String
   co_nickname String
@@ -61,4 +63,21 @@ model Merchant {
   createdAt DateTime @default(now())
   userId Int
   user User @relation(fields: [userId], references: [id])
+  serviceTicket ServiceTicket[]
+}
+
+model ServiceTicket{
+  id Int @id @default(autoincrement())
+  cardHolderId Int
+  merchantId Int
+  pickupDateTime DateTime
+  dropoffDateTime DateTime
+  pickupAddress String
+  dropoffAddress String
+  specialInstructions String
+  paymentStatus String
+  ticketStatus String
+  createdAt DateTime @default(now())
+  cardHolder CardHolder @relation(fields: [cardHolderId], references: [clientID])
+  merchant Merchant @relation(fields: [merchantId], references: [id])
 }

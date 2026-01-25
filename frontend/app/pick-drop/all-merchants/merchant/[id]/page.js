@@ -97,7 +97,6 @@ export default function MerchantProfile() {
         address,
         account_number,
         store_details,
-        agreement_paper,
         co_name,
         co_nickname,
         co_mobile,
@@ -107,7 +106,15 @@ export default function MerchantProfile() {
         agreement_url
     } = merchant;
 
-    const isPdf = typeof agreement_paper === 'string' && agreement_paper.toLowerCase().endsWith(".pdf");
+    const fullAgreementUrl = agreement_url && agreement_url !== "N/A"
+        ? `http://localhost:5000/download-pdf/${agreement_url}`
+        : null;
+
+    // console.log("Merchant Data:", merchant);
+    // console.log("Agreement URL from DB:", agreement_url);
+    // console.log("Full Agreement URL:", fullAgreementUrl);
+
+    const isPdf = fullAgreementUrl && fullAgreementUrl.toLowerCase().endsWith(".pdf");
 
     return (
         <Container maxWidth="xl" sx={{ py: 4 }}>
@@ -204,118 +211,56 @@ export default function MerchantProfile() {
                                                 <TableCell>{co_telephone}</TableCell>
                                                 <TableCell>{co_extension}</TableCell>
                                             </TableRow>
-
                                         </TableBody>
                                     </Table>
                                 </TableContainer>
-                                {/* <Alert severity="info" sx={{ bgcolor: '#e3f2fd', color: '#0d47a1', border: '1px solid #90caf9' }}>
-                                    No Communication Officer assigned.
-                                </Alert> */}
                             </CardContent>
                         </Card>
 
-                        {/* Campaigns */}
-                        {/* <Card sx={{ boxShadow: 1, borderRadius: 2 }}>
-                            <CardContent>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                                    <CampaignIcon color="secondary" />
-                                    <Typography variant="h6" fontWeight="bold">Campaigns</Typography>
-                                </Box>
-
-                                <TableContainer component={Paper} elevation={0} variant="outlined">
-                                    <Table>
-                                        <TableHead>
-                                            <TableRow>
-                                                <TableCell>Reward Code</TableCell>
-                                                <TableCell>Customer</TableCell>
-                                                <TableCell>Points</TableCell>
-                                                <TableCell>Amount</TableCell>
-                                                <TableCell>Status</TableCell>
-                                                <TableCell>Expiry</TableCell>
-                                            </TableRow>
-                                        </TableHead>
-                                        <TableBody>
-                                            {campaigns.map((row, index) => (
-                                                <TableRow key={index}>
-                                                    <TableCell>{row.code}</TableCell>
-                                                    <TableCell>
-                                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                                            <PersonIcon fontSize="small" color="action" />
-                                                            {row.customer}
-                                                        </Box>
-                                                    </TableCell>
-                                                    <TableCell>{row.points}</TableCell>
-                                                    <TableCell>{row.amount}</TableCell>
-                                                    <TableCell>
-                                                        <Chip
-                                                            label={row.status}
-                                                            size="small"
-                                                            variant="outlined"
-                                                            color={row.status === 'Claimed' ? 'primary' : 'success'}
-                                                        />
-                                                    </TableCell>
-                                                    <TableCell>{row.expiry}</TableCell>
-                                                </TableRow>
-                                            ))}
-                                        </TableBody>
-                                    </Table>
-                                </TableContainer>
-                            </CardContent>
-                        </Card> */}
-
                         {/* Agreement Document */}
-                        <Accordion sx={{ boxShadow: 1, borderRadius: 2, '&:before': { display: 'none' } }}>
-                            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Accordion elevation={3}>
+                            <AccordionSummary
+                                expandIcon={<ExpandMoreIcon />}
+                                aria-controls="panel1-content"
+                                id="panel1-header"
+                            >
+                                <Typography variant="h6" fontWeight="bold" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                     <PictureAsPdfIcon color="error" />
-                                    <Typography variant="h6" fontWeight="bold">Agreement Document</Typography>
-                                </Box>
+                                    Agreement Document
+                                </Typography>
                             </AccordionSummary>
                             <AccordionDetails>
-                                {agreement_paper ? (
-                                    <Box sx={{ width: '100%', mt: 1, minHeight: '400px', display: 'flex', flexDirection: 'column', gap: 2 }}>
-                                        <Box sx={{ display: 'flex', gap: 2 }}>
-                                            <Button
-                                                variant="contained"
-                                                size="small"
-                                                href={agreement_paper}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                            >
-                                                Open in New Tab
-                                            </Button>
+                                <Box sx={{
+                                    bgcolor: '#f5f5f5',
+                                    borderRadius: 1,
+                                    overflow: 'hidden',
+                                    border: '1px solid #e0e0e0',
+                                    minHeight: '500px'
+                                }}>
+                                    {loading ? (
+                                        <Skeleton variant="rectangular" width="100%" height={500} />
+                                    ) : merchant?.agreement_url ? (
+                                        <iframe
+                                            src={fullAgreementUrl}
+                                            width="100%"
+                                            height="500px"
+                                            style={{ border: 'none', minHeight: '500px' }}
+                                            title="Agreement Document"
+                                        >
+                                            <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" height="500px" p={3}>
+                                                <Typography color="text.secondary">
+                                                    Your browser does not support PDFs.
+                                                </Typography>
+                                            </Box>
+                                        </iframe>
+                                    ) : (
+                                        <Box display="flex" alignItems="center" justifyContent="center" height="500px">
+                                            <Typography color="text.secondary">
+                                                No agreement document available.
+                                            </Typography>
                                         </Box>
-
-                                        <Paper variant="outlined" sx={{ overflow: 'hidden', borderRadius: 2 }}>
-                                            {isPdf ? (
-                                                <iframe
-                                                    src={agreement_paper}
-                                                    width="100%"
-                                                    height="600px"
-                                                    style={{ border: 'none' }}
-                                                    title="Agreement Paper PDF"
-                                                />
-                                            ) : (
-                                                <Box
-                                                    component="img"
-                                                    src={agreement_url}
-                                                    alt="Agreement Paper"
-                                                    sx={{
-                                                        width: '100%',
-                                                        height: 'auto',
-                                                        maxHeight: '600px',
-                                                        objectFit: 'contain',
-                                                        bgcolor: '#f5f5f5'
-                                                    }}
-                                                />
-                                            )}
-                                        </Paper>
-                                    </Box>
-                                ) : (
-                                    <Typography color="text.secondary" fontStyle="italic">
-                                        No agreement paper uploaded.
-                                    </Typography>
-                                )}
+                                    )}
+                                </Box>
                             </AccordionDetails>
                         </Accordion>
 

@@ -13,7 +13,7 @@ export default function ExistingCardHolders() {
 
 
     useEffect(() => {
-        fetch("https://api.reward.smartemi.info/card-holders")
+        fetch("http://localhost:5000/card-holders")
             .then(res => res.json())
             .then(data => {
                 if (Array.isArray(data)) {
@@ -28,7 +28,7 @@ export default function ExistingCardHolders() {
     // Helper to extract data handling potential different key names safely
     const getHolderData = (holder) => {
         return {
-            id: holder.customerId || holder.cardHolderId || holder.id || "N/A",
+            id: holder.clientID || holder.cardHolderId || holder.id || "N/A",
             name: holder.name || holder.fullName || "N/A",
             mobile: holder.mobile || holder.mobileNumber || holder.phone || "N/A",
             email: holder.email || "N/A",

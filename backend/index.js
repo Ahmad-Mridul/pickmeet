@@ -60,6 +60,24 @@ app.post("/upload-pdf", upload.single('pdfFile'), async (req, res) => {
     }
 });
 
+app.get("/download-pdf/:filename", (req, res) => {
+    const filename = req.params.filename;
+    const filePath = path.join(__dirname, 'uploads', filename);
+
+    console.log("Request for PDF:", filename);
+    console.log("Resolved path:", filePath);
+
+    if (fs.existsSync(filePath)) {
+        console.log("File exists, serving...");
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', 'inline'); // Ensure it displays in browser
+        res.sendFile(filePath);
+    } else {
+        console.error("File not found at path:", filePath);
+        res.status(404).send("File not found");
+    }
+});
+
 
 
 
@@ -73,6 +91,16 @@ const prisma = new PrismaClient();
 app.get("/card-holders", async (req, res) => {
     const cardHolders = await prisma.cardHolder.findMany();
     res.send(cardHolders);
+});
+app.get("/pick-drop/all-holders/:id", async (req, res) => {
+    const id = parseInt(req.params.id);
+    console.log("clientid from params: ", id);
+    const cardHolder = await prisma.cardHolder.findUnique({
+        where: {
+            clientID: id
+        }
+    });
+    res.send(cardHolder);
 });
 app.post("/register/user-holder", async (req, res) => {
     const { clientID, name, mobile, card_number, card_type, service_limit, email, address, password, role } = req.body;
@@ -128,7 +156,7 @@ app.get("/merchant/:id", async (req, res) => {
 app.post("/register/merchant", upload.single('agreement_url'), async (req, res) => {
     // Destructure with defaults for safety
     const {
-        name, mobile, address, payment_method, account_name, branch_name,
+        name, mobile, address, payment_method, account_name, branch_name, service_charge,
         co_name = "", co_nickname = "", co_mobile = "", co_email = "", co_telephone = "", co_extension = "",
         email, password, role = "merchant"
     } = req.body;
@@ -143,30 +171,31 @@ app.post("/register/merchant", upload.single('agreement_url'), async (req, res) 
     }
 
     // Parse Integer fields
-    routing_number = parseInt(routing_number) || 0;
-    account_number = parseInt(account_number) || 0;
+    // Parse Integer fields
+    // routing_number = parseInt(routing_number) || 0;
+    // account_number = parseInt(account_number) || 0;
 
-    const merchant = {
-        name,
-        mobile,
-        address,
-        payment_method,
-        account_name,
-        branch_name,
-        routing_number,
-        account_number,
-        agreement_url,
-        co_name,
-        co_nickname,
-        co_mobile,
-        co_email,
-        co_telephone,
-        co_extension,
-        email,
-        password,
-        role
-    }
-    console.log(merchant);
+    // const merchant = {
+    //     name,
+    //     mobile,
+    //     address,
+    //     payment_method,
+    //     service_charge,
+    //     account_name,
+    //     branch_name,
+    //     routing_number,
+    //     account_number,
+    //     agreement_url,
+    //     co_name,
+    //     co_nickname,
+    //     co_mobile,
+    //     co_email,
+    //     co_telephone,
+    //     co_extension,
+    //     email,
+    //     password,
+    //     role
+    // }
     try {
         const result = await prisma.$transaction(async (tx) => {
             const newUser = await tx.user.create({
@@ -178,7 +207,7 @@ app.post("/register/merchant", upload.single('agreement_url'), async (req, res) 
             });
             const newMerchant = await tx.merchant.create({
                 data: {
-                    name, mobile, address, payment_method, account_name, branch_name, routing_number, account_number, agreement_url, co_name, co_nickname, co_mobile, co_email, co_telephone, co_extension, email, password, role,
+                    name, mobile, address, payment_method, service_charge, account_name, branch_name, routing_number, account_number, agreement_url, co_name, co_nickname, co_mobile, co_email, co_telephone, co_extension, email, password, role,
                     user: {
                         connect: {
                             id: newUser.id
@@ -197,9 +226,49 @@ app.post("/register/merchant", upload.single('agreement_url'), async (req, res) 
 
 
 
+app.post("/register/service-ticket", async (req, res) => {
+    try {
+        const { cardHolderId, merchantId, pickupDateTime, dropoffDateTime, pickupAddress, dropoffAddress, specialInstructions, paymentStatus, ticketStatus } = req.body;
+
+        const serviceTicket = await prisma.serviceTicket.create({
+            data: {
+                cardHolderId: parseInt(cardHolderId),
+                merchantId: parseInt(merchantId),
+                pickupDateTime: new Date(pickupDateTime),
+                dropoffDateTime: new Date(dropoffDateTime),
+                pickupAddress: pickupAddress || "",
+                dropoffAddress: dropoffAddress || "",
+                specialInstructions: specialInstructions || "",
+                paymentStatus: paymentStatus || "Unpaid",
+                ticketStatus: ticketStatus || "pending",
+            }
+        })
+        res.status(200).json({ message: "Service ticket created successfully", serviceTicket });
+    } catch (error) {
+        console.log("Service ticket creation failed", error);
+        res.status(500).json({ error: "Service ticket creation failed" });
+    }
+});
 
 
-
+app.get("/pick-drop/service-tickets", async (req, res) => {
+    const serviceTickets = await prisma.serviceTicket.findMany({
+        include: {
+            cardHolder: true,
+            merchant: true
+        }
+    });
+    res.send(serviceTickets);
+});
+app.get("/pick-drop/service-tickets/:id", async (req, res) => {
+    const id = parseInt(req.params.id);
+    const serviceTicket = await prisma.serviceTicket.findUnique({
+        where: {
+            id: id
+        }
+    });
+    res.send(serviceTicket);
+});
 
 
 app.get('/', (req, res) => {

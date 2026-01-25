@@ -41,7 +41,7 @@ export default function Sidebar() {
             <div className="flex items-center justify-between p-4 border-b border-gray-700 h-20">
                 {!isCollapsed && (
                     <h1 className="text-2xl font-bold bg-gradient-to-r from-red-400 to-gray-400 bg-clip-text text-transparent">
-                        PickMeet
+                        Airport Service
                     </h1>
                 )}
                 <button

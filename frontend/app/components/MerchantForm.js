@@ -39,6 +39,7 @@ const merchantFormSchema = z.object({
     branch_name: z.string().optional(),
     routing_number: z.string().optional(),
     payment_method: z.string().optional(),
+    service_charge: z.string().optional(),
     // Communication Officer Fields
     officer_name: z.string().optional(),
     officer_nickname: z.string().optional(),
@@ -67,6 +68,7 @@ export default function MerchantForm({ onMerchantAdded }) {
             branch_name: "",
             routing_number: "",
             payment_method: "",
+            service_charge: "",
             officer_name: "",
             officer_nickname: "",
             officer_mobile: "",
@@ -84,7 +86,7 @@ export default function MerchantForm({ onMerchantAdded }) {
         const merchantFields = [
             "name", "address", "mobile", "email", "password",
             "account_number", "store_details",
-            "account_name", "branch_name", "routing_number", "payment_method"
+            "account_name", "branch_name", "routing_number", "payment_method", "service_charge"
         ];
 
         merchantFields.forEach((key) => {
@@ -373,7 +375,7 @@ export default function MerchantForm({ onMerchantAdded }) {
                                     </Grid>
 
                                     {/* Payment Method Dropdown */}
-                                    <Grid item size={12}>
+                                    <Grid item size={6}>
                                         <Controller
                                             name="payment_method"
                                             control={form.control}
@@ -390,6 +392,15 @@ export default function MerchantForm({ onMerchantAdded }) {
                                                     <option value="Account Pay">Account Pay</option>
                                                     <option value="BFTN">BFTN</option>
                                                 </TextField>
+                                            )}
+                                        />
+                                    </Grid>
+                                    <Grid item size={6}>
+                                        <Controller
+                                            name="service_charge"
+                                            control={form.control}
+                                            render={({ field }) => (
+                                                <TextField {...field} label="Service Charge" fullWidth size="small" />
                                             )}
                                         />
                                     </Grid>

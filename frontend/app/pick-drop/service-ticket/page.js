@@ -5,6 +5,7 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { toast } from "sonner";
+import Swal from 'sweetalert2';
 import { useRouter } from "next/navigation";
 import {
     Button,
@@ -16,63 +17,35 @@ import {
     Grid,
     Box,
     Typography,
-    CircularProgress,
-    FormControl,
-    InputLabel,
-    Select,
-    MenuItem,
-    Checkbox,
-    FormControlLabel,
     Alert,
 } from "@mui/material";
-import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
-import InputAdornment from "@mui/material/InputAdornment";
 
 import { Eye, AlertCircle } from "lucide-react";
 
-// Demo data for services with prices
-const DEMO_SERVICES = {
-    merchant1: [
-        { id: "service1", name: "Dry Cleaning", price: 20.0 },
-        { id: "service2", name: "Shoe Repair", price: 15.0 },
-        { id: "service3", name: "Alteration", price: 25.0 },
-    ],
-    merchant2: [
-        { id: "service4", name: "Oil Change", price: 35.0 },
-        { id: "service5", name: "Tire Rotation", price: 18.0 },
-        { id: "service6", name: "Battery Replacement", price: 50.0 },
-    ],
-    merchant3: [
-        { id: "service7", name: "Screen Repair", price: 75.0 },
-        { id: "service8", name: "Battery Replacement", price: 40.0 },
-    ],
-};
-
 // Zod schema for Service Ticket form
 const serviceTicketSchema = z.object({
-    cardHolderId: z.string().min(1, "Card Holder is required"),
-    merchantId: z.string().min(1, "Merchant is required"),
-    serviceId: z.string().min(1, "Service is required"),
+    cardHolderId: z.union([z.string(), z.number()]).refine(val => val !== "", "Card Holder is required"),
+    merchantId: z.union([z.string(), z.number()]).refine(val => val !== "", "Merchant is required"),
     pickupDateTime: z.string().min(1, "Pick-up date & time is required"),
     dropoffDateTime: z.string().min(1, "Drop-off date & time is required"),
-    useCardHolderAddress: z.boolean().default(true),
     pickupAddress: z.string().optional(),
+    dropoffAddress: z.string().optional(),
     specialInstructions: z.string().optional(),
-    paymentStatus: z.enum(["prepaid", "pay-on-pickup", "bill-to-card"]).default("bill-to-card"),
+    paymentStatus: z.enum(["unpaid", "paid"]).default("unpaid"),
     ticketStatus: z.enum(["pending", "approved", "assigned", "picked-up", "delivered"]).default("pending"),
 });
 
 export default function ServiceTicket() {
     const router = useRouter();
-    
+
     // State for card holders
     const [cardHolders, setCardHolders] = useState([]);
     const [selectedCardHolder, setSelectedCardHolder] = useState(null);
     const [cardHolderDetails, setCardHolderDetails] = useState({
-        cardNumber: "",
-        phoneNumber: "",
+        card_number: "",
+        mobile: "",
         email: "",
-        cardType: "",
+        card_type: "",
         address: "",
     });
     const [loadingCardHolder, setLoadingCardHolder] = useState(false);
@@ -82,7 +55,12 @@ export default function ServiceTicket() {
     const [selectedMerchant, setSelectedMerchant] = useState(null);
     const [merchantDetails, setMerchantDetails] = useState({
         address: "",
-        contactInfo: "",
+        service_charge: "",
+        co_name: "",
+        co_email: "",
+        co_mobile: "",
+        co_telephone: "",
+        co_extension: ""
     });
     const [services, setServices] = useState([]);
     const [loadingMerchant, setLoadingMerchant] = useState(false);
@@ -103,13 +81,12 @@ export default function ServiceTicket() {
         defaultValues: {
             cardHolderId: "",
             merchantId: "",
-            serviceId: "",
             pickupDateTime: "",
             dropoffDateTime: "",
-            useCardHolderAddress: true,
             pickupAddress: "",
+            dropoffAddress: "",
             specialInstructions: "",
-            paymentStatus: "bill-to-card",
+            paymentStatus: "unpaid",
             ticketStatus: "pending",
         },
     });
@@ -124,7 +101,7 @@ export default function ServiceTicket() {
         const fetchCardHolders = async () => {
             try {
                 const response = await fetch(
-                    "https://api.reward.smartemi.info/card-holders"
+                    "http://localhost:5000/card-holders"
                 );
                 if (!response.ok) throw new Error("Failed to fetch card holders");
                 const data = await response.json();
@@ -144,7 +121,7 @@ export default function ServiceTicket() {
     useEffect(() => {
         const fetchMerchants = async () => {
             try {
-                const response = await fetch("https://api.reward.smartemi.info/merchants");
+                const response = await fetch("http://localhost:5000/merchants");
                 if (!response.ok) throw new Error("Failed to fetch merchants");
                 const data = await response.json();
                 if (Array.isArray(data)) {
@@ -166,15 +143,15 @@ export default function ServiceTicket() {
             const fetchDetails = async () => {
                 try {
                     const response = await fetch(
-                        `https://api.reward.smartemi.info/card-holders/${watchCardHolderId}`
+                        `http://localhost:5000/pick-drop/all-holders/${watchCardHolderId}`
                     );
                     if (!response.ok) throw new Error("Failed to fetch card holder details");
                     const data = await response.json();
                     setCardHolderDetails({
-                        cardNumber: data.card_number || data.cardNumber || "N/A",
-                        phoneNumber: data.mobile || data.phone || data.phoneNumber || "N/A",
+                        card_number: data.card_number || data.cardNumber || "N/A",
+                        mobile: data.mobile || data.phone || data.phoneNumber || "N/A",
                         email: data.email || "N/A",
-                        cardType: data.card_type || data.cardType || "N/A",
+                        card_type: data.card_type || data.cardType || "N/A",
                         address: data.address || "N/A",
                     });
                 } catch (err) {
@@ -196,13 +173,19 @@ export default function ServiceTicket() {
             const fetchDetails = async () => {
                 try {
                     const response = await fetch(
-                        `https://api.reward.smartemi.info/merchants/${watchMerchantId}`
+                        `http://localhost:5000/merchant/${watchMerchantId}`
                     );
                     if (!response.ok) throw new Error("Failed to fetch merchant details");
                     const data = await response.json();
                     setMerchantDetails({
                         address: data.address || "N/A",
                         contactInfo: data.mobile || data.phone || data.contactNumber || "N/A",
+                        service_charge: data.service_charge || "N/A",
+                        co_name: data.co_name || "N/A",
+                        co_email: data.co_email || "N/A",
+                        co_mobile: data.co_mobile || "N/A",
+                        co_telephone: data.co_telephone || "N/A",
+                        co_extension: data.co_extension || "N/A",
                     });
 
                     // Use demo services for now - easily replaceable with API call
@@ -241,13 +224,11 @@ export default function ServiceTicket() {
     // Format card holder options with searchable fields
     const cardHolderOptions = useMemo(() => {
         return cardHolders.map((holder) => ({
-            id: holder.customerId || holder.cardHolderId || holder.id,
-            label: `${holder.name || holder.fullName || "Unknown"} (${
-                holder.mobile || holder.phone || "N/A"
-            })`,
-            searchText: `${holder.name || holder.fullName || ""} ${
-                holder.mobile || holder.phone || ""
-            }`.toLowerCase(),
+            id: holder.clientID || holder.customerId || holder.cardHolderId || holder.id,
+            label: `${holder.name || holder.fullName || "Unknown"} (${holder.mobile || holder.phone || "N/A"
+                })`,
+            searchText: `${holder.name || holder.fullName || ""} ${holder.mobile || holder.phone || ""
+                }`.toLowerCase(),
             ...holder,
         }));
     }, [cardHolders]);
@@ -269,34 +250,43 @@ export default function ServiceTicket() {
                 cardHolderDetails,
                 merchantId: watchMerchantId,
                 merchantDetails,
-                serviceId: watchServiceId,
-                selectedService,
                 pickupDateTime: data.pickupDateTime,
                 dropoffDateTime: data.dropoffDateTime,
-                useCardHolderAddress: data.useCardHolderAddress,
-                pickupAddress: data.useCardHolderAddress
-                    ? cardHolderDetails.address
-                    : data.pickupAddress,
+                pickupAddress: data.pickupAddress,
+                dropoffAddress: data.dropoffAddress,
                 specialInstructions: data.specialInstructions,
                 paymentStatus: data.paymentStatus,
                 ticketStatus: data.ticketStatus,
                 serviceCharge,
                 createdAt: new Date().toISOString(),
             };
+            console.log("payload: ", payload);
+            // Send to API
+            const response = await fetch("http://localhost:5000/register/service-ticket", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload),
+            });
 
-            console.log("Service Ticket Data:", payload);
-            toast.success("Service Ticket created successfully!");
-
-            // TODO: Uncomment to send to API:
-            // const response = await fetch("https://api.reward.smartemi.info/service-tickets", {
-            //     method: "POST",
-            //     headers: { "Content-Type": "application/json" },
-            //     body: JSON.stringify(payload),
-            // });
-            // if (!response.ok) throw new Error("Failed to create service ticket");
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || "Failed to create service ticket");
+            } else {
+                Swal.fire({
+                    title: "Success!",
+                    text: "Service has been created successfully.",
+                    icon: "success",
+                    confirmButtonText: "Cool"
+                });
+            }
+            reset();
+            router.push("/pick-drop/service-ticket/all-service-tickets");
         } catch (err) {
-            toast.error("Error creating service ticket", {
-                description: err.message,
+            Swal.fire({
+                title: "Error!",
+                text: "Error creating service ticket.",
+                icon: "error",
+                confirmButtonText: "Cool"
             });
         }
     };
@@ -306,7 +296,7 @@ export default function ServiceTicket() {
             <form onSubmit={handleSubmit(onSubmit)}>
                 <Grid container spacing={3}>
                     {/* Header Section */}
-                    <Grid item xs={12}>
+                    <Grid item size={12}>
                         <Box
                             sx={{
                                 display: "flex",
@@ -353,7 +343,7 @@ export default function ServiceTicket() {
                     <Grid item xs={12}>
                         <Card sx={{ borderLeft: "5px solid #667eea" }}>
                             <CardHeader
-                                title="👤 Customer Information"
+                                title="👤 Card Holder Information"
                                 sx={{
                                     backgroundColor: "#f5f5f5",
                                     borderBottom: "2px solid #667eea",
@@ -362,7 +352,7 @@ export default function ServiceTicket() {
                             <CardContent>
                                 <Grid container spacing={2}>
                                     {/* Card Holder Autocomplete */}
-                                    <Grid item xs={12} md={6}>
+                                    <Grid item size={4}>
                                         <Controller
                                             name="cardHolderId"
                                             control={control}
@@ -404,10 +394,10 @@ export default function ServiceTicket() {
                                     </Grid>
 
                                     {/* Card Number (Read-only) */}
-                                    <Grid item xs={12} md={6}>
+                                    <Grid item size={4}>
                                         <TextField
                                             label="Card Number"
-                                            value={cardHolderDetails.cardNumber}
+                                            value={cardHolderDetails.card_number}
                                             fullWidth
                                             disabled
                                             variant="outlined"
@@ -420,10 +410,10 @@ export default function ServiceTicket() {
                                     </Grid>
 
                                     {/* Phone Number (Read-only) */}
-                                    <Grid item xs={12} md={6}>
+                                    <Grid item size={4}>
                                         <TextField
                                             label="Phone Number"
-                                            value={cardHolderDetails.phoneNumber}
+                                            value={cardHolderDetails.mobile}
                                             fullWidth
                                             disabled
                                             variant="outlined"
@@ -436,7 +426,7 @@ export default function ServiceTicket() {
                                     </Grid>
 
                                     {/* Email Address (Read-only) */}
-                                    <Grid item xs={12} md={6}>
+                                    <Grid item size={8}>
                                         <TextField
                                             label="Email Address"
                                             value={cardHolderDetails.email}
@@ -452,10 +442,10 @@ export default function ServiceTicket() {
                                     </Grid>
 
                                     {/* Card Type (Read-only) */}
-                                    <Grid item xs={12} md={6}>
+                                    <Grid item size={4}>
                                         <TextField
                                             label="Card Type"
-                                            value={cardHolderDetails.cardType}
+                                            value={cardHolderDetails.card_type}
                                             fullWidth
                                             disabled
                                             variant="outlined"
@@ -468,7 +458,7 @@ export default function ServiceTicket() {
                                     </Grid>
 
                                     {/* Address (Read-only) */}
-                                    <Grid item xs={12}>
+                                    <Grid item size={12}>
                                         <TextField
                                             label="Address"
                                             value={cardHolderDetails.address}
@@ -490,7 +480,7 @@ export default function ServiceTicket() {
                     </Grid>
 
                     {/* Merchant & Service Section */}
-                    <Grid item xs={12}>
+                    <Grid item size={12}>
                         <Card sx={{ borderLeft: "5px solid #764ba2" }}>
                             <CardHeader
                                 title="🏪 Merchant & Service Selection"
@@ -502,7 +492,7 @@ export default function ServiceTicket() {
                             <CardContent>
                                 <Grid container spacing={2}>
                                     {/* Merchant Autocomplete */}
-                                    <Grid item xs={12} md={6}>
+                                    <Grid item size={6}>
                                         <Controller
                                             name="merchantId"
                                             control={control}
@@ -542,7 +532,7 @@ export default function ServiceTicket() {
                                     </Grid>
 
                                     {/* Merchant Contact Info (Read-only) */}
-                                    <Grid item xs={12} md={6}>
+                                    <Grid item size={6}>
                                         <TextField
                                             label="Contact Number"
                                             value={merchantDetails.contactInfo}
@@ -558,25 +548,10 @@ export default function ServiceTicket() {
                                     </Grid>
 
                                     {/* Merchant Address (Read-only) */}
-                                    <Grid item xs={12}>
-                                        <TextField
-                                            label="Merchant Address"
-                                            value={merchantDetails.address}
-                                            fullWidth
-                                            disabled
-                                            variant="outlined"
-                                            multiline
-                                            rows={2}
-                                            sx={{
-                                                "& .MuiOutlinedInput-root": {
-                                                    backgroundColor: "#f9f9f9",
-                                                },
-                                            }}
-                                        />
-                                    </Grid>
+
 
                                     {/* Service Selection */}
-                                    <Grid item xs={12} md={6}>
+                                    {/* <Grid item size={8}>
                                         <Controller
                                             name="serviceId"
                                             control={control}
@@ -612,30 +587,109 @@ export default function ServiceTicket() {
                                                 {errors.serviceId.message}
                                             </Typography>
                                         )}
-                                    </Grid>
+                                    </Grid> */}
 
                                     {/* Service Charge (Read-only) */}
-                                   <Grid item xs={12} md={6}>
-  <TextField
-    label="Service Charge"
-    value={`$${serviceCharge.toFixed(2)}`}
-    fullWidth
-    disabled
-    variant="outlined"
-    sx={{
-      "& .MuiOutlinedInput-root": {
-        backgroundColor: "#f0f7ff",
-      },
-    }}
-    InputProps={{
-      startAdornment: (
-        <InputAdornment position="start">
-          <AttachMoneyIcon fontSize="small" />
-        </InputAdornment>
-      ),
-    }}
-  />
-</Grid>
+                                    <Grid item size={6}>
+                                        <TextField
+                                            label="Service Charge"
+                                            value={merchantDetails.service_charge}
+                                            fullWidth
+                                            disabled
+                                            variant="outlined"
+                                            sx={{
+                                                "& .MuiOutlinedInput-root": {
+                                                    backgroundColor: "#f9f9f9",
+                                                },
+                                            }}
+                                        />
+                                    </Grid>
+                                    <Grid item size={6}>
+                                        <TextField
+                                            label="Communication Officer Name"
+                                            value={merchantDetails.co_name}
+                                            fullWidth
+                                            disabled
+                                            variant="outlined"
+                                            sx={{
+                                                "& .MuiOutlinedInput-root": {
+                                                    backgroundColor: "#f9f9f9",
+                                                },
+                                            }}
+                                        />
+                                    </Grid>
+                                    <Grid item size={6}>
+                                        <TextField
+                                            label="Communication Officer Email"
+                                            value={merchantDetails.co_email}
+                                            fullWidth
+                                            disabled
+                                            variant="outlined"
+                                            sx={{
+                                                "& .MuiOutlinedInput-root": {
+                                                    backgroundColor: "#f9f9f9",
+                                                },
+                                            }}
+                                        />
+                                    </Grid>
+                                    <Grid item size={6}>
+                                        <TextField
+                                            label="Communication Officer Mobile"
+                                            value={merchantDetails.co_mobile}
+                                            fullWidth
+                                            disabled
+                                            variant="outlined"
+                                            sx={{
+                                                "& .MuiOutlinedInput-root": {
+                                                    backgroundColor: "#f9f9f9",
+                                                },
+                                            }}
+                                        />
+                                    </Grid>
+                                    <Grid item size={6}>
+                                        <TextField
+                                            label="Communication Officer Telephone"
+                                            value={merchantDetails.co_telephone}
+                                            fullWidth
+                                            disabled
+                                            variant="outlined"
+                                            sx={{
+                                                "& .MuiOutlinedInput-root": {
+                                                    backgroundColor: "#f9f9f9",
+                                                },
+                                            }}
+                                        />
+                                    </Grid>
+                                    <Grid item size={6}>
+                                        <TextField
+                                            label="Communication Officer Extension"
+                                            value={merchantDetails.co_extension}
+                                            fullWidth
+                                            disabled
+                                            variant="outlined"
+                                            sx={{
+                                                "& .MuiOutlinedInput-root": {
+                                                    backgroundColor: "#f9f9f9",
+                                                },
+                                            }}
+                                        />
+                                    </Grid>
+                                    <Grid item size={12}>
+                                        <TextField
+                                            label="Merchant Address"
+                                            value={merchantDetails.address}
+                                            fullWidth
+                                            disabled
+                                            variant="outlined"
+                                            multiline
+                                            rows={2}
+                                            sx={{
+                                                "& .MuiOutlinedInput-root": {
+                                                    backgroundColor: "#f9f9f9",
+                                                },
+                                            }}
+                                        />
+                                    </Grid>
 
                                 </Grid>
                             </CardContent>
@@ -643,10 +697,10 @@ export default function ServiceTicket() {
                     </Grid>
 
                     {/* Logistics & Scheduling Section */}
-                    <Grid item xs={12}>
+                    <Grid item size={12}>
                         <Card sx={{ borderLeft: "5px solid #00bcd4" }}>
                             <CardHeader
-                                title="📅 Logistics & Scheduling"
+                                title="📅 Scheduling"
                                 sx={{
                                     backgroundColor: "#f5f5f5",
                                     borderBottom: "2px solid #00bcd4",
@@ -655,7 +709,7 @@ export default function ServiceTicket() {
                             <CardContent>
                                 <Grid container spacing={2}>
                                     {/* Requested Pick-up Time */}
-                                    <Grid item xs={12} md={6}>
+                                    <Grid item size={6}>
                                         <Controller
                                             name="pickupDateTime"
                                             control={control}
@@ -674,7 +728,7 @@ export default function ServiceTicket() {
                                     </Grid>
 
                                     {/* Expected Drop-off Time */}
-                                    <Grid item xs={12} md={6}>
+                                    <Grid item size={6}>
                                         <Controller
                                             name="dropoffDateTime"
                                             control={control}
@@ -692,56 +746,42 @@ export default function ServiceTicket() {
                                         />
                                     </Grid>
 
-                                    {/* Use Card Holder Address Toggle */}
-                                    <Grid item xs={12}>
-                                        <Box
-                                            sx={{
-                                                p: 2,
-                                                backgroundColor: "#f9f9f9",
-                                                borderRadius: 1,
-                                                border: "1px solid #e0e0e0",
-                                            }}
-                                        >
-                                            <Controller
-                                                name="useCardHolderAddress"
-                                                control={control}
-                                                render={({ field }) => (
-                                                    <FormControlLabel
-                                                        control={
-                                                            <Checkbox
-                                                                {...field}
-                                                                checked={field.value}
-                                                            />
-                                                        }
-                                                        label="Use Card Holder's Address for Pick-up?"
-                                                    />
-                                                )}
-                                            />
-                                        </Box>
+                                    {/* Custom Pick-up Address */}
+                                    <Grid item size={6}>
+                                        <Controller
+                                            name="pickupAddress"
+                                            control={control}
+                                            render={({ field }) => (
+                                                <TextField
+                                                    {...field}
+                                                    label="Enter Pick-up Address"
+                                                    fullWidth
+                                                    multiline
+                                                    rows={2}
+                                                    placeholder="Street address, city, zip..."
+                                                />
+                                            )}
+                                        />
+                                    </Grid>
+                                    <Grid item size={6}>
+                                        <Controller
+                                            name="dropoffAddress"
+                                            control={control}
+                                            render={({ field }) => (
+                                                <TextField
+                                                    {...field}
+                                                    label="Enter Drop-off Address"
+                                                    fullWidth
+                                                    multiline
+                                                    rows={2}
+                                                    placeholder="Street address, city, zip..."
+                                                />
+                                            )}
+                                        />
                                     </Grid>
 
-                                    {/* Custom Pick-up Address */}
-                                    {!watchUseCardHolderAddress && (
-                                        <Grid item xs={12}>
-                                            <Controller
-                                                name="pickupAddress"
-                                                control={control}
-                                                render={({ field }) => (
-                                                    <TextField
-                                                        {...field}
-                                                        label="Enter Pick-up Address"
-                                                        fullWidth
-                                                        multiline
-                                                        rows={2}
-                                                        placeholder="Street address, city, zip..."
-                                                    />
-                                                )}
-                                            />
-                                        </Grid>
-                                    )}
-
                                     {/* Special Instructions */}
-                                    <Grid item xs={12}>
+                                    <Grid item size={12}>
                                         <Controller
                                             name="specialInstructions"
                                             control={control}
@@ -767,7 +807,7 @@ export default function ServiceTicket() {
                         <Alert
                             severity="info"
                             icon={<AlertCircle size={20} />}
-                            sx={{ 
+                            sx={{
                                 borderRadius: 1,
                                 backgroundColor: "#e3f2fd",
                                 color: "#1565c0",
@@ -800,7 +840,7 @@ export default function ServiceTicket() {
                                     setServiceCharge(0);
                                     setSelectedService(null);
                                 }}
-                                sx={{ 
+                                sx={{
                                     px: 3,
                                     textTransform: "none",
                                     fontWeight: 600,
