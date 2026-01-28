@@ -24,6 +24,7 @@ import StorefrontIcon from '@mui/icons-material/Storefront';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 
 import { usePathname } from "next/navigation"
+import Swal from "sweetalert2"
 
 // Zod schema remains the same
 const merchantFormSchema = z.object({
@@ -133,6 +134,11 @@ export default function MerchantForm({ onMerchantAdded }) {
                 }
                 console.error("Registration Error:", errorData);
                 throw new Error(errorData.error || errorData.message || JSON.stringify(errorData));
+            } else {
+                Swal.fire({
+                    title: "Merchant registered successfully!",
+                    icon: "success"
+                });
             }
 
             const merchantResult = await response.json()

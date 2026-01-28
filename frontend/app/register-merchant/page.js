@@ -23,7 +23,7 @@ export default function Merchant() {
                         <h1 className="text-3xl font-bold text-gray-800">Manage Merchants</h1>
                     </div>
                     <div>
-                        <Link href="/pick-drop/all-merchants" className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                        <Link href="/all-merchants" className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
                             View All Merchants
                         </Link>
                     </div>

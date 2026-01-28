@@ -118,7 +118,7 @@ export default function AllServiceTickets() {
         const fetchTickets = async () => {
             try {
                 setLoadingTickets(true);
-                const response = await fetch("http://localhost:5000/pick-drop/service-tickets");
+                const response = await fetch("http://localhost:5000/service-tickets");
                 if (!response.ok) throw new Error("Failed to fetch tickets");
                 const data = await response.json();
                 setTickets(data);
@@ -178,7 +178,7 @@ export default function AllServiceTickets() {
         URL.revokeObjectURL(url);
         toast.success("Ticket exported successfully");
     };
-
+    const meetGreetTickets = tickets.filter((ticket) => ticket?.serviceType === "meet-and-greet");
     return (
         <Box sx={{ p: 3, maxWidth: "1400px", mx: "auto", backgroundColor: "#fafafa", minHeight: "100vh" }}>
             {/* Header */}
@@ -209,19 +209,35 @@ export default function AllServiceTickets() {
                         </Typography>
                     </Box>
                 </Box>
-                <Typography
-                    variant="h6"
-                    sx={{
-                        backgroundColor: "#667eea",
-                        color: "white",
-                        px: 3,
-                        py: 1,
-                        borderRadius: 2,
-                        fontWeight: "bold",
-                    }}
-                >
-                    {filteredTickets.length} Tickets
-                </Typography>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                    <Typography
+                        variant="h6"
+                        sx={{
+                            backgroundColor: "#667eea",
+                            color: "white",
+                            px: 3,
+                            py: 1,
+                            borderRadius: 2,
+                            fontWeight: "bold",
+                        }}
+                    >
+                        {meetGreetTickets.length} Tickets
+                    </Typography>
+                    <Button
+                        variant="contained"
+                        sx={{
+                            backgroundColor: "#667eea",
+                            color: "white",
+                            px: 3,
+                            py: 1.5,
+                            borderRadius: 2,
+                            fontWeight: "bold",
+                        }}
+                        onClick={() => router.push("/meet-greet/generate-service-ticket")}
+                    >
+                        Generate A New Ticket
+                    </Button>
+                </Box>
             </Box>
 
             {/* Search Bar */}
@@ -284,7 +300,7 @@ export default function AllServiceTickets() {
                         </TableHead>
                         <TableBody>
                             {tickets.length > 0 ? (
-                                tickets.map((ticket) => (
+                                tickets.filter((ticket) => ticket.serviceType === "meet-and-greet").map((ticket) => (
                                     <TableRow
                                         key={ticket.id}
                                         sx={{

@@ -36,8 +36,8 @@ CREATE TABLE "Merchant" (
     "service_charge" TEXT,
     "account_name" TEXT NOT NULL,
     "branch_name" TEXT NOT NULL,
-    "routing_number" INTEGER NOT NULL,
-    "account_number" INTEGER NOT NULL,
+    "routing_number" TEXT NOT NULL,
+    "account_number" TEXT NOT NULL,
     "agreement_url" TEXT NOT NULL,
     "co_name" TEXT NOT NULL,
     "co_nickname" TEXT NOT NULL,
@@ -54,6 +54,26 @@ CREATE TABLE "Merchant" (
     CONSTRAINT "Merchant_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "ServiceTicket" (
+    "id" SERIAL NOT NULL,
+    "cardHolderId" INTEGER NOT NULL,
+    "merchantId" INTEGER NOT NULL,
+    "serviceType" TEXT NOT NULL,
+    "pickupDateTime" TIMESTAMP(3) NOT NULL,
+    "dropoffDateTime" TIMESTAMP(3) NOT NULL,
+    "meetDateTime" TIMESTAMP(3),
+    "pickupAddress" TEXT NOT NULL,
+    "dropoffAddress" TEXT NOT NULL,
+    "meetAddress" TEXT,
+    "specialInstructions" TEXT NOT NULL,
+    "paymentStatus" TEXT NOT NULL,
+    "ticketStatus" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "ServiceTicket_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
@@ -68,3 +88,9 @@ ALTER TABLE "CardHolder" ADD CONSTRAINT "CardHolder_userId_fkey" FOREIGN KEY ("u
 
 -- AddForeignKey
 ALTER TABLE "Merchant" ADD CONSTRAINT "Merchant_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ServiceTicket" ADD CONSTRAINT "ServiceTicket_cardHolderId_fkey" FOREIGN KEY ("cardHolderId") REFERENCES "CardHolder"("clientID") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ServiceTicket" ADD CONSTRAINT "ServiceTicket_merchantId_fkey" FOREIGN KEY ("merchantId") REFERENCES "Merchant"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

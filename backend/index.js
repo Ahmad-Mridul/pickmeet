@@ -103,8 +103,8 @@ app.get("/pick-drop/all-holders/:id", async (req, res) => {
     res.send(cardHolder);
 });
 app.post("/register/card-holder", async (req, res) => {
-    const { clientID, name, mobile, card_number, card_type, service_limit, email, address, password, role } = req.body;
-    console.log(service_limit);
+    let { clientID, name, mobile, card_number, card_type, service_limit, email, address, password, role } = req.body;
+    console.log("clientID, name", clientID, name);
     if (card_type === "platinum") {
         service_limit = 6;
     }
@@ -227,23 +227,48 @@ app.post("/register/merchant", upload.single('agreement_url'), async (req, res) 
     }
 });
 
-
+// =================================
+//          Service Ticket
+// =================================
 
 app.post("/register/service-ticket", async (req, res) => {
     try {
-        const { cardHolderId, merchantId, pickupDateTime, dropoffDateTime, pickupAddress, dropoffAddress, specialInstructions, paymentStatus, ticketStatus } = req.body;
+        const { cardHolderId, merchantId, pickupDateTime, dropoffDateTime, pickupAddress, dropoffAddress, specialInstructions, paymentStatus, ticketStatus, serviceType } = req.body;
+
+        console.log("serviceType: ", serviceType);
+
+        // Handle optional dates safely
+        let pickupDate = pickupDateTime ? new Date(pickupDateTime) : null;
+        let dropoffDate = dropoffDateTime ? new Date(dropoffDateTime) : null;
+        let meetDate = null;
+
+        if (serviceType === "meet-and-greet" || serviceType === "greet-and-meet") {
+            meetDate = pickupDate;
+            pickupDate = null;
+            dropoffDate = null;
+        }
 
         const serviceTicket = await prisma.serviceTicket.create({
             data: {
-                cardHolderId: parseInt(cardHolderId),
-                merchantId: parseInt(merchantId),
-                pickupDateTime: new Date(pickupDateTime),
-                dropoffDateTime: new Date(dropoffDateTime),
+                cardHolder: {
+                    connect: {
+                        clientID: parseInt(cardHolderId)
+                    }
+                },
+                merchant: {
+                    connect: {
+                        id: parseInt(merchantId)
+                    }
+                },
+                pickupDateTime: pickupDate,
+                dropoffDateTime: dropoffDate,
+                meetDateTime: meetDate,
                 pickupAddress: pickupAddress || "",
                 dropoffAddress: dropoffAddress || "",
                 specialInstructions: specialInstructions || "",
                 paymentStatus: paymentStatus || "Unpaid",
                 ticketStatus: ticketStatus || "pending",
+                serviceType: serviceType || "Unspecified"
             }
         })
         res.status(200).json({ message: "Service ticket created successfully", serviceTicket });
@@ -254,7 +279,7 @@ app.post("/register/service-ticket", async (req, res) => {
 });
 
 
-app.get("/pick-drop/service-tickets", async (req, res) => {
+app.get("/service-tickets", async (req, res) => {
     const serviceTickets = await prisma.serviceTicket.findMany({
         include: {
             cardHolder: true,
@@ -263,7 +288,7 @@ app.get("/pick-drop/service-tickets", async (req, res) => {
     });
     res.send(serviceTickets);
 });
-app.get("/pick-drop/service-tickets/:id", async (req, res) => {
+app.get("/service-tickets/:id", async (req, res) => {
     const id = parseInt(req.params.id);
     const serviceTicket = await prisma.serviceTicket.findUnique({
         where: {

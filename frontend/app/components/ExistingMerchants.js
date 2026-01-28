@@ -164,7 +164,7 @@ function MerchantsTable({ merchants, onEdit, onDelete }) {
             {/* <CardHeader title={<Typography variant="h6" fontWeight="bold" sx={{ color: '#333' }}>Existing Merchants</Typography>} /> */}
             <div className="flex justify-between items-center p-5">
                 <p className="text-lg font-semibold text-black">Existing Merchants</p>
-                <Link href="/pick-drop/all-merchants/merchant" className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Add New Merchant</Link>
+                <Link href="/register-merchant" className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Add New Merchant</Link>
             </div>
             <Box sx={{ px: 3, pb: 2 }}>
                 <TextField

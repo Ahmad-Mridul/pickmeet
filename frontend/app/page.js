@@ -96,8 +96,8 @@ export default function Home() {
               </div>
               <div className="text-right">
                 <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${activity.status === "Completed" ? "bg-green-100 text-green-700" :
-                    activity.status === "In Progress" ? "bg-blue-100 text-blue-700" :
-                      "bg-yellow-100 text-yellow-700"
+                  activity.status === "In Progress" ? "bg-blue-100 text-blue-700" :
+                    "bg-yellow-100 text-yellow-700"
                   }`}>
                   {activity.status}
                 </span>

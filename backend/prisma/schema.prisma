@@ -70,11 +70,14 @@ model ServiceTicket{
   id Int @id @default(autoincrement())
   cardHolderId Int
   merchantId Int
-  pickupDateTime DateTime
-  dropoffDateTime DateTime
-  pickupAddress String
-  dropoffAddress String
-  specialInstructions String
+  serviceType String
+  pickupDateTime DateTime?
+  dropoffDateTime DateTime?
+  meetDateTime DateTime?
+  pickupAddress String?
+  dropoffAddress String?
+  meetAddress String?
+  specialInstructions String?
   paymentStatus String
   ticketStatus String
   createdAt DateTime @default(now())

@@ -9,10 +9,28 @@ export const metadata = {
 const PickAndDrop = () => {
     const options = [
         {
-            title: "Add Card-Holder",
+            title: "View All Card Holders",
+            description: "View All Card Holders.",
+            icon: CreditCard,
+            href: "/all-holders",
+            color: "text-blue-600",
+            bg: "bg-blue-50",
+            hover: "hover:shadow-blue-200"
+        },
+        {
+            title: "Add Card Holder",
             description: "Register a new card holder for Pick & Drop services.",
             icon: CreditCard,
-            href: "/pick-drop/all-holders/card-holder",
+            href: "/register-card-holder",
+            color: "text-blue-600",
+            bg: "bg-blue-50",
+            hover: "hover:shadow-blue-200"
+        },
+        {
+            title: "View All Merchants",
+            description: "View All Merchants.",
+            icon: CreditCard,
+            href: "/all-merchants",
             color: "text-blue-600",
             bg: "bg-blue-50",
             hover: "hover:shadow-blue-200"
@@ -21,7 +39,7 @@ const PickAndDrop = () => {
             title: "Add Merchant",
             description: "Onboard a new merchant partner to the platform.",
             icon: Store,
-            href: "/pick-drop/merchant",
+            href: "/register-merchant",
             color: "text-purple-600",
             bg: "bg-purple-50",
             hover: "hover:shadow-purple-200"
@@ -30,7 +48,7 @@ const PickAndDrop = () => {
             title: "Create Service Ticket",
             description: "Raise a new support or service ticket.",
             icon: Ticket,
-            href: "/pick-drop/service-ticket",
+            href: "/pick-drop/generate-service-ticket",
             color: "text-green-600",
             bg: "bg-green-50",
             hover: "hover:shadow-green-200"

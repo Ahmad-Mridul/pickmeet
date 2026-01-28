@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { toast } from "sonner";
 import Swal from 'sweetalert2';
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
     Button,
     TextField,
@@ -27,7 +27,7 @@ const serviceTicketSchema = z.object({
     cardHolderId: z.union([z.string(), z.number()]).refine(val => val !== "", "Card Holder is required"),
     merchantId: z.union([z.string(), z.number()]).refine(val => val !== "", "Merchant is required"),
     pickupDateTime: z.string().min(1, "Pick-up date & time is required"),
-    dropoffDateTime: z.string().min(1, "Drop-off date & time is required"),
+    dropoffDateTime: z.string().optional(),
     pickupAddress: z.string().optional(),
     dropoffAddress: z.string().optional(),
     specialInstructions: z.string().optional(),
@@ -37,7 +37,7 @@ const serviceTicketSchema = z.object({
 
 export default function ServiceTicket() {
     const router = useRouter();
-
+    const pathname = usePathname();
     // State for card holders
     const [cardHolders, setCardHolders] = useState([]);
     const [selectedCardHolder, setSelectedCardHolder] = useState(null);
@@ -257,6 +257,7 @@ export default function ServiceTicket() {
                 specialInstructions: data.specialInstructions,
                 paymentStatus: data.paymentStatus,
                 ticketStatus: data.ticketStatus,
+                serviceType: "meet-and-greet",
                 serviceCharge,
                 createdAt: new Date().toISOString(),
             };
@@ -311,10 +312,10 @@ export default function ServiceTicket() {
                         >
                             <Box>
                                 <Typography variant="h4" sx={{ fontWeight: "bold", mb: 0.5 }}>
-                                    📋 Service Ticket Booking
+                                    📋 Meet & Greet Service Ticket Booking
                                 </Typography>
                                 <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                                    Book pickup and drop-off services from our merchant partners
+                                    Book meet and greet services from our merchant partners
                                 </Typography>
                             </Box>
                             <Button
@@ -331,7 +332,7 @@ export default function ServiceTicket() {
                                     display: "flex",
                                     gap: 1,
                                 }}
-                                onClick={() => router.push("/pick-drop/service-ticket/all-service-tickets")}
+                                onClick={() => router.push("/meet-greet/all-service-tickets")}
                             >
                                 <Eye size={20} />
                                 View All Tickets
@@ -716,7 +717,7 @@ export default function ServiceTicket() {
                                             render={({ field }) => (
                                                 <TextField
                                                     {...field}
-                                                    label="Requested Pick-up Time"
+                                                    label="Requested Meet-Up Time"
                                                     type="datetime-local"
                                                     fullWidth
                                                     InputLabelProps={{ shrink: true }}
@@ -727,24 +728,7 @@ export default function ServiceTicket() {
                                         />
                                     </Grid>
 
-                                    {/* Expected Drop-off Time */}
-                                    <Grid item size={6}>
-                                        <Controller
-                                            name="dropoffDateTime"
-                                            control={control}
-                                            render={({ field }) => (
-                                                <TextField
-                                                    {...field}
-                                                    label="Expected Drop-off Time"
-                                                    type="datetime-local"
-                                                    fullWidth
-                                                    InputLabelProps={{ shrink: true }}
-                                                    error={!!errors.dropoffDateTime}
-                                                    helperText={errors.dropoffDateTime?.message}
-                                                />
-                                            )}
-                                        />
-                                    </Grid>
+
 
                                     {/* Custom Pick-up Address */}
                                     <Grid item size={6}>
@@ -754,31 +738,16 @@ export default function ServiceTicket() {
                                             render={({ field }) => (
                                                 <TextField
                                                     {...field}
-                                                    label="Enter Pick-up Address"
+                                                    label="Enter Meet-Up Address"
                                                     fullWidth
                                                     multiline
-                                                    rows={2}
+                                                    // rows={2}
                                                     placeholder="Street address, city, zip..."
                                                 />
                                             )}
                                         />
                                     </Grid>
-                                    <Grid item size={6}>
-                                        <Controller
-                                            name="dropoffAddress"
-                                            control={control}
-                                            render={({ field }) => (
-                                                <TextField
-                                                    {...field}
-                                                    label="Enter Drop-off Address"
-                                                    fullWidth
-                                                    multiline
-                                                    rows={2}
-                                                    placeholder="Street address, city, zip..."
-                                                />
-                                            )}
-                                        />
-                                    </Grid>
+
 
                                     {/* Special Instructions */}
                                     <Grid item size={12}>
@@ -801,6 +770,7 @@ export default function ServiceTicket() {
                             </CardContent>
                         </Card>
                     </Grid>
+
 
                     {/* Info Alert */}
                     <Grid item xs={12}>

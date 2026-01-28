@@ -1,11 +1,13 @@
 "use client";
 
+import { Button } from "@mui/material";
 import { Home, MapPin, Users, ChevronLeft, ChevronRight, ChevronDown, ChevronUp } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-
+import { signIn, signOut, useSession } from "next-auth/react"
 export default function Sidebar() {
+    const session = useSession();
     const [isCollapsed, setIsCollapsed] = useState(false);
     // Track which menu text is open. Default empty or expanded if active? keeping simple for now.
     const [expandedMenu, setExpandedMenu] = useState("Pick & Drop");
@@ -18,12 +20,21 @@ export default function Sidebar() {
             icon: MapPin,
             href: "/pick-drop",
             children: [
-                { name: "Card Holder", href: "/pick-drop/all-holders" },
-                { name: "Merchant", href: "/pick-drop/all-merchants" },
-                { name: "Service Ticket", href: "/pick-drop/service-ticket" },
+                { name: "Card Holder", href: "/all-holders" },
+                { name: "Merchant", href: "/all-merchants" },
+                { name: "Service Ticket", href: "/pick-drop/all-service-tickets" },
             ]
         },
-        { name: "Meet & Greet", icon: Users, href: "/meet-greet" },
+        {
+            name: "Meet & Greet",
+            icon: Users,
+            href: "/meet-greet",
+            children: [
+                { name: "Card Holder", href: "/all-holders" },
+                { name: "Merchant", href: "/all-merchants" },
+                { name: "Service Ticket", href: "/meet-greet/all-service-tickets" },
+            ]
+        },
     ];
 
     const sidebarClass = isCollapsed ? "w-20" : "w-64";
@@ -38,22 +49,22 @@ export default function Sidebar() {
             className={`${sidebarClass} bg-gradient-to-b from-gray-900 to-gray-800 text-white min-h-screen transition-all duration-300 ease-in-out flex flex-col shadow-xl z-50`}
         >
             {/* Header / Logo Area */}
-            <div className="flex items-center justify-between p-4 border-b border-gray-700 h-20">
+            <div className="flex items-center justify-between p-4 border-b border-gray-700 ">
                 {!isCollapsed && (
                     <h1 className="text-2xl font-bold bg-gradient-to-r from-red-400 to-gray-400 bg-clip-text text-transparent">
                         Airport Service
                     </h1>
                 )}
-                <button
+                {/* <button
                     onClick={() => setIsCollapsed(!isCollapsed)}
                     className="p-2 rounded-full hover:bg-gray-700 transition-colors focus:outline-none"
                 >
                     {isCollapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
-                </button>
+                </button> */}
             </div>
 
             {/* Navigation Items */}
-            <nav className="flex-1 py-6 space-y-2 px-3 overflow-y-auto">
+            <nav className="mb-6 py-6 space-y-2 px-3 overflow-y-auto">
                 {menuItems.map((item) => {
                     const isActive = pathname === item.href || (item.children && item.children.some(child => pathname === child.href));
                     const isExpanded = expandedMenu === item.name;
@@ -126,7 +137,12 @@ export default function Sidebar() {
                             <p className="text-xs text-gray-400 truncate">user@example.com</p>
                         </div>
                     )}
+
                 </div>
+                <div>
+                    <Button variant="contained" sx={{ marginTop: "20px" }} onClick={() => signIn()}>Login</Button>
+                </div>
+                <p>Session: {JSON.stringify(session)}</p>
             </div>
         </div>
     );

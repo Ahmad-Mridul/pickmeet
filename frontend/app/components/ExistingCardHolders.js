@@ -63,7 +63,7 @@ export default function ExistingCardHolders() {
     return (
         <div>
             <div className="mb-5 flex justify-end">
-                <Link href="/pick-drop/all-holders/card-holder" className="shadow-lg bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                <Link href="/register-card-holder" className="shadow-lg bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
                     Add Card-holder
                 </Link>
             </div>
@@ -114,7 +114,7 @@ export default function ExistingCardHolders() {
                                             <td className="px-6 py-4 text-gray-600">{data.email}</td>
                                             <td className="px-6 py-4 font-mono text-gray-600 ">{data.card}</td>
                                             <td className="px-6 py-4 flex items-center justify-center">
-                                                <Link href={`/pick-drop/all-holders/${data.id}`}>
+                                                <Link href={`/all-holders/${data.id}`}>
                                                     <View size={20} className="text-blue-600" />
                                                 </Link>
                                             </td>

@@ -3,6 +3,7 @@
 import { UserPlus, CreditCard, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
+import Swal from "sweetalert2";
 
 export default function CardHolder() {
     const [clientID, setClientID] = useState("");
@@ -63,6 +64,10 @@ export default function CardHolder() {
 
 
             if (response.ok) {
+                Swal.fire({
+                    title: "Card holder registered successfully!",
+                    icon: "success"
+                });
                 // alert("Card holder registered successfully!");
                 // Reset form
                 setClientID("");

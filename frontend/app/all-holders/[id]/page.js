@@ -109,15 +109,15 @@ export default function CardHolderProfile() {
     const isPdf = typeof agreement_paper === 'string' && agreement_paper.toLowerCase().endsWith(".pdf");
 
     return (
-        <Container maxWidth="xl" sx={{ py: 4 }}>
+        <Container maxWidth={'xl'} sx={{ py: 4 }}>
             <Box sx={{ mb: 3 }}>
                 <Typography variant="h4" fontWeight="bold" className="text-black">Card Holder Profile</Typography>
                 <Typography variant="body2" color="text.secondary">ID: {id}</Typography>
             </Box>
 
-            <Grid container spacing={4}>
+            <Grid container spacing={2}>
                 {/* Left Sidebar - Profile Info */}
-                <Grid item xs={12} md={4}>
+                <Grid item size={4}>
                     <Card sx={{ height: '100%', boxShadow: 1, borderRadius: 2 }}>
                         <CardContent sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', pt: 4 }}>
                             <Avatar sx={{ width: 80, height: 80, bgcolor: '#1976d2', fontSize: 32, mb: 2 }}>
@@ -164,7 +164,7 @@ export default function CardHolderProfile() {
                 </Grid>
 
                 {/* Right Content - Details */}
-                <Grid item xs={12} md={8}>
+                <Grid item size={8}>
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
 
                         {/* Status / Officer */}
