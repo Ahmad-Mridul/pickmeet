@@ -145,6 +145,7 @@ app.post("/register/card-holder", async (req, res) => {
 
 app.get("/merchants", async (req, res) => {
     try {
+        console.log("DATABASE_URL:", process.env.DATABASE_URL);
         const merchants = await prisma.merchant.findMany();
         res.json(merchants);
     } catch (error) {
