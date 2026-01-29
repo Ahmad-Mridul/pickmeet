@@ -118,7 +118,7 @@ export default function AllServiceTickets() {
         const fetchTickets = async () => {
             try {
                 setLoadingTickets(true);
-                const response = await fetch("http://localhost:5000/service-tickets");
+                const response = await fetch("https://pickmeet-backend.onrender.com/service-tickets");
                 if (!response.ok) throw new Error("Failed to fetch tickets");
                 const data = await response.json();
                 setTickets(data);

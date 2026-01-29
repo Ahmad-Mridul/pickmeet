@@ -118,7 +118,7 @@ export default function MerchantForm({ onMerchantAdded }) {
             }
 
             // 1. Register Merchant
-            const response = await fetch("http://localhost:5000/register/merchant", {
+            const response = await fetch("https://pickmeet-backend.onrender.com/register/merchant", {
                 method: "POST",
                 body: formData,
             })

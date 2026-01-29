@@ -16,7 +16,7 @@ export default function Sidebar() {
     const [userProfile, setUserProfile] = useState(null);
     useEffect(() => {
         const fetchUserProfile = async () => {
-            const response = await fetch("http://localhost:5000/merchants");
+            const response = await fetch("https://pickmeet-backend.onrender.com/merchants");
             const data = await response.json();
             setUserProfile(data.find(merchant => merchant.userId === session?.data?.user?.id));
         };

@@ -56,7 +56,7 @@ export default function MerchantProfile() {
         const fetchMerchant = async () => {
             if (!id) return;
             try {
-                const response = await fetch(`http://localhost:5000/merchant/${id}`);
+                const response = await fetch(`https://pickmeet-backend.onrender.com/merchant/${id}`);
                 if (!response.ok) throw new Error("Failed to fetch merchant details");
                 const data = await response.json();
                 setMerchant(data);
@@ -107,7 +107,7 @@ export default function MerchantProfile() {
     } = merchant;
 
     const fullAgreementUrl = agreement_url && agreement_url !== "N/A"
-        ? `http://localhost:5000/download-pdf/${agreement_url}`
+        ? `https://pickmeet-backend.onrender.com/download-pdf/${agreement_url}`
         : null;
 
     // console.log("Merchant Data:", merchant);

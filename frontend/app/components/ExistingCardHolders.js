@@ -13,7 +13,7 @@ export default function ExistingCardHolders() {
 
 
     useEffect(() => {
-        fetch("http://localhost:5000/card-holders")
+        fetch("https://pickmeet-backend.onrender.com/card-holders")
             .then(res => res.json())
             .then(data => {
                 if (Array.isArray(data)) {

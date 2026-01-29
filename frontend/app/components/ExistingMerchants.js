@@ -73,7 +73,7 @@ export default function ExistingMerchants({ refreshTrigger }) {
         const fetchMerchants = async () => {
             try {
                 // console.log("Fetching merchants from API...");
-                const response = await fetch("http://localhost:5000/merchants")
+                const response = await fetch("https://pickmeet-backend.onrender.com/merchants")
                 if (!response.ok) throw new Error("Failed to fetch merchants")
                 const data = await response.json()
                 setMerchants(data)
