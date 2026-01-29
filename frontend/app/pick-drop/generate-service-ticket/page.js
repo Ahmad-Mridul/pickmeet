@@ -282,7 +282,7 @@ export default function ServiceTicket() {
                 });
             }
             reset();
-            router.push("/pick-drop/service-ticket/all-service-tickets");
+            router.push("/pick-drop/all-service-tickets");
         } catch (err) {
             Swal.fire({
                 title: "Error!",
