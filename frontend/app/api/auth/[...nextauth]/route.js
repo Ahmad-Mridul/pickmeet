@@ -1,5 +1,6 @@
 import NextAuth from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials";
+
 export const authOptions = {
     providers: [
         CredentialsProvider({
@@ -9,9 +10,9 @@ export const authOptions = {
                 password: { label: "Password", type: "password" }
             },
             async authorize(credentials, req) {
-                console.log("credentials: ", credentials);
-                const user = { id: "1", name: "J Smith", email: "jsmith@example.com" }
-
+                const user = await fetch("http://localhost:5000/users")
+                    .then(res => res.json())
+                    .then(data => data.find(user => user.email === credentials.email && user.password === credentials.password));
                 if (user) {
                     return user
                 } else {
@@ -20,11 +21,27 @@ export const authOptions = {
             }
         })
     ],
-    session: {
-        strategy: "jwt",
+    callbacks: {
+        async session({ session, user, token }) {
+            if (token) {
+                session.user.email = token.email;
+                session.user.role = token.role;
+                session.user.id = token.id;
+            }
+            return session
+        },
+        async jwt({ token, user, account, profile, isNewUser }) {
+            if (user) {
+                token.id = user.id;
+                token.email = user.email;
+                token.role = user.role;
+            }
+            return token
+        }
     },
-
-    secret: process.env.NEXTAUTH_SECRET,
+    pages: {
+        signIn: '/login',
+    }
 }
 const handler = NextAuth(authOptions)
 

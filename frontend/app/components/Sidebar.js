@@ -4,10 +4,24 @@ import { Button } from "@mui/material";
 import { Home, MapPin, Users, ChevronLeft, ChevronRight, ChevronDown, ChevronUp } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
-import { signIn, signOut, useSession } from "next-auth/react"
+import { useEffect, useState } from "react";
+import { signIn, signOut, useSession } from "next-auth/react";
+
+
+
+
 export default function Sidebar() {
     const session = useSession();
+    console.log(session);
+    const [userProfile, setUserProfile] = useState(null);
+    useEffect(() => {
+        const fetchUserProfile = async () => {
+            const response = await fetch("http://localhost:5000/merchants");
+            const data = await response.json();
+            setUserProfile(data.find(merchant => merchant.userId === session?.data?.user?.id));
+        };
+        fetchUserProfile();
+    }, [session]);
     const [isCollapsed, setIsCollapsed] = useState(false);
     // Track which menu text is open. Default empty or expanded if active? keeping simple for now.
     const [expandedMenu, setExpandedMenu] = useState("Pick & Drop");
@@ -46,7 +60,7 @@ export default function Sidebar() {
 
     return (
         <div
-            className={`${sidebarClass} bg-gradient-to-b from-gray-900 to-gray-800 text-white min-h-screen transition-all duration-300 ease-in-out flex flex-col shadow-xl z-50`}
+            className="w-[15%] min-h-screen"
         >
             {/* Header / Logo Area */}
             <div className="flex items-center justify-between p-4 border-b border-gray-700 ">
@@ -64,7 +78,7 @@ export default function Sidebar() {
             </div>
 
             {/* Navigation Items */}
-            <nav className="mb-6 py-6 space-y-2 px-3 overflow-y-auto">
+            <nav className="mb-6 py-6 space-y-2 px-3 ">
                 {menuItems.map((item) => {
                     const isActive = pathname === item.href || (item.children && item.children.some(child => pathname === child.href));
                     const isExpanded = expandedMenu === item.name;
@@ -128,21 +142,26 @@ export default function Sidebar() {
             {/* Footer User Profile (Optional placeholder) */}
             <div className="p-4 border-t border-gray-700">
                 <div className={`flex items-center ${isCollapsed ? "justify-center" : "space-x-3"}`}>
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-purple-400 to-blue-500 flex items-center justify-center font-bold text-white shadow-md">
-                        U
-                    </div>
+
                     {!isCollapsed && (
-                        <div className="overflow-hidden">
-                            <p className="text-sm font-semibold truncate">User Name</p>
-                            <p className="text-xs text-gray-400 truncate">user@example.com</p>
+                        <div className="">
+                            <p className="text-sm font-semibold truncate">{userProfile?.name}</p>
+                            <p className="text-xs text-gray-400 truncate">{session?.data?.user?.email}</p>
                         </div>
                     )}
 
                 </div>
                 <div>
-                    <Button variant="contained" sx={{ marginTop: "20px" }} onClick={() => signIn()}>Login</Button>
+                    {
+                        session.status === "authenticated" ? (
+                            <Button variant="contained" sx={{ marginTop: "20px" }} onClick={() => signOut()}>Logout</Button>
+                        ) : (
+                            <Button variant="contained" sx={{ marginTop: "20px" }} onClick={() => signIn()}>Login</Button>
+                        )
+                    }
+
                 </div>
-                <p>Session: {JSON.stringify(session)}</p>
+                {/* <p className="text-red-500">{JSON.stringify(session)}</p> */}
             </div>
         </div>
     );

@@ -299,6 +299,25 @@ app.get("/service-tickets/:id", async (req, res) => {
 });
 
 
+
+app.get("/users", async (req, res) => {
+    const users = await prisma.user.findMany();
+    res.send(users);
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 app.get('/', (req, res) => {
     res.send("Server is connected");
 });
