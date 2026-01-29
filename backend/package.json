@@ -17,7 +17,8 @@
     "date-fns": "^4.1.0",
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
-    "multer": "^2.0.2"
+    "multer": "^2.0.2",
+    "postgres": "^3.4.8"
   },
   "devDependencies": {
     "prisma": "^6.19.2"
