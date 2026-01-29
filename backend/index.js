@@ -144,9 +144,18 @@ app.post("/register/card-holder", async (req, res) => {
 // =================================
 
 app.get("/merchants", async (req, res) => {
-    const merchants = await prisma.merchant.findMany();
-    res.send(merchants);
+    try {
+        const merchants = await prisma.merchant.findMany();
+        res.json(merchants);
+    } catch (error) {
+        console.error("ERROR /merchants:", error);
+        res.status(500).json({
+            message: "Internal Server Error",
+            error: error.message,
+        });
+    }
 });
+
 app.get("/merchant/:id", async (req, res) => {
     const id = parseInt(req.params.id);
     const merchant = await prisma.merchant.findUnique({
