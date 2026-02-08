@@ -1,14 +1,23 @@
 "use client";
 
 import Link from "next/link";
-import { MapPin, Users, Clock, CheckCircle, TrendingUp, AlertCircle } from "lucide-react";
+import { MapPin, Users, Clock, CheckCircle, TrendingUp, AlertCircle, Tickets, MapPinned } from "lucide-react";
+import { useEffect, useState } from "react";
 
 export default function Home() {
+  const [serviceTickets, setServiceTickets] = useState([]);
+  useEffect(() => {
+    fetch("http://localhost:5000/service-tickets")
+      .then(res => res.json())
+      .then(data => setServiceTickets(data))
+  }, []);
+  const pickAndDropServices = serviceTickets.filter(service => service.serviceType === "pick-and-drop").length;
+  const meetAndGreetServices = serviceTickets.filter(service => service.serviceType === "meet-and-greet").length;
   const stats = [
-    { label: "Active Requests", value: "12", icon: Clock, color: "text-blue-500", bg: "bg-blue-100" },
-    { label: "Completed Today", value: "8", icon: CheckCircle, color: "text-green-500", bg: "bg-green-100" },
-    { label: "Pending Actions", value: "3", icon: AlertCircle, color: "text-red-500", bg: "bg-red-100" },
-    { label: "Total Revenue", value: "$4,250", icon: TrendingUp, color: "text-purple-500", bg: "bg-purple-100" },
+    { label: "Total Service Tickets", value: serviceTickets.length, icon: Tickets, color: "text-blue-500", bg: "bg-blue-100" },
+    { label: "Pick & Drop Services", value: pickAndDropServices, icon: MapPinned, color: "text-green-500", bg: "bg-green-100" },
+    { label: "Meet & Greet Services", value: meetAndGreetServices, icon: Users, color: "text-red-500", bg: "bg-red-100" },
+    // { label: "Total Revenue", value: "$4,250", icon: TrendingUp, color: "text-purple-500", bg: "bg-purple-100" },
   ];
 
   const activities = [
@@ -80,7 +89,7 @@ export default function Home() {
       </div>
 
       {/* Recent Activity Section */}
-      <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-8">
+      {/* <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-8">
         <h2 className="text-xl font-bold text-gray-800 mb-6">Recent Activity</h2>
         <div className="space-y-6">
           {activities.map((activity, index) => (
@@ -106,7 +115,7 @@ export default function Home() {
             </div>
           ))}
         </div>
-      </div>
+      </div> */}
     </div>
   );
 }

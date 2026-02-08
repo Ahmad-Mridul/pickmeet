@@ -23,7 +23,8 @@ import {
     Accordion,
     AccordionSummary,
     AccordionDetails,
-    Alert
+    Alert,
+    Skeleton
 } from "@mui/material";
 import StoreIcon from "@mui/icons-material/Store";
 import EmailIcon from "@mui/icons-material/Email";
@@ -56,7 +57,7 @@ export default function MerchantProfile() {
         const fetchMerchant = async () => {
             if (!id) return;
             try {
-                const response = await fetch(`https://pickmeet-backend.onrender.com/merchant/${id}`);
+                const response = await fetch(`http://localhost:5000/merchant/${id}`);
                 if (!response.ok) throw new Error("Failed to fetch merchant details");
                 const data = await response.json();
                 setMerchant(data);
@@ -107,12 +108,8 @@ export default function MerchantProfile() {
     } = merchant;
 
     const fullAgreementUrl = agreement_url && agreement_url !== "N/A"
-        ? `https://pickmeet-backend.onrender.com/download-pdf/${agreement_url}`
+        ? `http://localhost:5000/download-pdf/${agreement_url}`
         : null;
-
-    // console.log("Merchant Data:", merchant);
-    // console.log("Agreement URL from DB:", agreement_url);
-    // console.log("Full Agreement URL:", fullAgreementUrl);
 
     const isPdf = fullAgreementUrl && fullAgreementUrl.toLowerCase().endsWith(".pdf");
 
@@ -239,20 +236,28 @@ export default function MerchantProfile() {
                                 }}>
                                     {loading ? (
                                         <Skeleton variant="rectangular" width="100%" height={500} />
-                                    ) : merchant?.agreement_url ? (
-                                        <iframe
-                                            src={fullAgreementUrl}
+                                    ) : fullAgreementUrl ? (
+                                        <object
+                                            data={fullAgreementUrl}
+                                            type="application/pdf"
                                             width="100%"
                                             height="500px"
-                                            style={{ border: 'none', minHeight: '500px' }}
-                                            title="Agreement Document"
+                                            style={{ minHeight: '500px' }}
                                         >
-                                            <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" height="500px" p={3}>
+                                            <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" height="100%" gap={2} p={3}>
                                                 <Typography color="text.secondary">
-                                                    Your browser does not support PDFs.
+                                                    Unable to display PDF directly.
                                                 </Typography>
+                                                <Button
+                                                    variant="contained"
+                                                    href={fullAgreementUrl}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                >
+                                                    Download Agreement
+                                                </Button>
                                             </Box>
-                                        </iframe>
+                                        </object>
                                     ) : (
                                         <Box display="flex" alignItems="center" justifyContent="center" height="500px">
                                             <Typography color="text.secondary">

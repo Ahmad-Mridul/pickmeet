@@ -1,4 +1,5 @@
 "use client"
+import { useSession } from "next-auth/react"
 
 import { useState, useEffect } from "react"
 import { useForm, Controller } from "react-hook-form"
@@ -72,8 +73,7 @@ export default function ExistingMerchants({ refreshTrigger }) {
     useEffect(() => {
         const fetchMerchants = async () => {
             try {
-                // console.log("Fetching merchants from API...");
-                const response = await fetch("https://pickmeet-backend.onrender.com/merchants")
+                const response = await fetch("http://localhost:5000/merchants")
                 if (!response.ok) throw new Error("Failed to fetch merchants")
                 const data = await response.json()
                 setMerchants(data)
@@ -84,7 +84,7 @@ export default function ExistingMerchants({ refreshTrigger }) {
             }
         }
         fetchMerchants()
-    }, [refreshTrigger]) // Refetch when triggered
+    }, [refreshTrigger])
 
     const handleEditMerchant = (merchant) => {
         setEditingMerchant(merchant)
@@ -102,12 +102,16 @@ export default function ExistingMerchants({ refreshTrigger }) {
         setDeleteDialog({ open: true, merchantId, merchantName })
     }
 
-    const handleConfirmDelete = async () => {
+    const handleConfirmDelete = async ({ password, userEmail }) => {
         if (!deleteDialog.merchantId) return
 
         setIsDeleting(true)
         try {
-            const response = await fetch(`https://api.reward.smartemi.info/merchants/${deleteDialog.merchantId}`, { method: "DELETE" })
+            const response = await fetch(`http://localhost:5000/merchants/${deleteDialog.merchantId}`, {
+                method: "DELETE",
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password, userEmail })
+            })
             if (!response.ok) {
                 const errorData = await response.json()
                 throw new Error(errorData.message || "Failed to delete merchant")
@@ -221,7 +225,7 @@ function MerchantsTable({ merchants, onEdit, onDelete }) {
                                                 <IconButton
                                                     size="small"
                                                     aria-label="view"
-                                                    onClick={() => router.push(`/pick-drop/all-merchants/merchant/${merchant.id}`)}
+                                                    onClick={() => router.push(`/all-merchants/${merchant.id}`)}
                                                     sx={{ color: 'primary.main' }}
                                                 >
                                                     <ViewIcon size={18} />
@@ -251,19 +255,66 @@ function MerchantsTable({ merchants, onEdit, onDelete }) {
 }
 
 function DeleteConfirmationDialog({ open, merchantName, onConfirm, onCancel, isLoading }) {
+    const { data: session } = useSession()
+    const [password, setPassword] = useState("")
+    const [isPasswordCorrect, setIsPasswordCorrect] = useState(false)
+
+    // Reset state when dialog opens/closes
+    useEffect(() => {
+        if (open) {
+            setPassword("")
+            setIsPasswordCorrect(false)
+        }
+    }, [open])
+
+    const handlePasswordChange = (e) => {
+        const newPassword = e.target.value
+        setPassword(newPassword)
+
+        const userEmail = session?.user?.email;
+        if (!userEmail || !newPassword) {
+            setIsPasswordCorrect(false);
+            return;
+        }
+
+        fetch('http://localhost:5000/verify-password', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: userEmail, password: newPassword })
+        })
+            .then(res => res.json())
+            .then(data => setIsPasswordCorrect(data.success))
+            .catch(() => setIsPasswordCorrect(false));
+    };
+
     return (
         <Dialog open={open} onClose={onCancel}>
             <DialogTitle>Delete Merchant?</DialogTitle>
             <DialogContent>
-                <Typography>
+                <Typography gutterBottom>
                     Are you sure you want to delete <strong>{merchantName}</strong>? This action cannot be undone.
                 </Typography>
+                <TextField
+                    label="Enter Password to Confirm"
+                    type="password"
+                    fullWidth
+                    value={password}
+                    onChange={handlePasswordChange}
+                    error={password.length > 0 && !isPasswordCorrect}
+                    helperText={password.length > 0 && !isPasswordCorrect ? "Incorrect password" : ""}
+                    sx={{ mt: 2 }}
+                />
             </DialogContent>
             <DialogActions>
                 <Button onClick={onCancel} disabled={isLoading}>
                     Cancel
                 </Button>
-                <Button onClick={onConfirm} color="error" variant="contained" disabled={isLoading}>
+                <Button
+                    onClick={() => onConfirm({ password, userEmail: session?.user?.email })}
+                    color="error"
+                    variant="contained"
+                    disabled={isLoading || !isPasswordCorrect}
+                >
                     {isLoading ? "Deleting..." : "Delete"}
                 </Button>
             </DialogActions>
@@ -320,7 +371,7 @@ function EditMerchantModal({ open, merchant, onClose, onEditComplete }) {
         }
 
         try {
-            const response = await fetch(`https://api.reward.smartemi.info/merchants/${merchant.id}`, {
+            const response = await fetch(`http://localhost:5000/merchants/${merchant.id}`, {
                 method: "PUT",
                 body: formData,
             });

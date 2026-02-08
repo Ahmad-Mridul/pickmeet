@@ -30,6 +30,8 @@ const serviceTicketSchema = z.object({
     dropoffDateTime: z.string().optional(),
     pickupAddress: z.string().optional(),
     dropoffAddress: z.string().optional(),
+    meetAddress: z.string().optional(),
+    flightNumber: z.string().optional(),
     specialInstructions: z.string().optional(),
     paymentStatus: z.enum(["unpaid", "paid"]).default("unpaid"),
     ticketStatus: z.enum(["pending", "approved", "assigned", "picked-up", "delivered"]).default("pending"),
@@ -85,6 +87,8 @@ export default function ServiceTicket() {
             dropoffDateTime: "",
             pickupAddress: "",
             dropoffAddress: "",
+            meetAddress: "",
+            flightNumber: "",
             specialInstructions: "",
             paymentStatus: "unpaid",
             ticketStatus: "pending",
@@ -101,7 +105,7 @@ export default function ServiceTicket() {
         const fetchCardHolders = async () => {
             try {
                 const response = await fetch(
-                    "https://pickmeet-backend.onrender.com/card-holders"
+                    "http://localhost:5000/card-holders"
                 );
                 if (!response.ok) throw new Error("Failed to fetch card holders");
                 const data = await response.json();
@@ -121,7 +125,7 @@ export default function ServiceTicket() {
     useEffect(() => {
         const fetchMerchants = async () => {
             try {
-                const response = await fetch("https://pickmeet-backend.onrender.com/merchants");
+                const response = await fetch("http://localhost:5000/merchants");
                 if (!response.ok) throw new Error("Failed to fetch merchants");
                 const data = await response.json();
                 if (Array.isArray(data)) {
@@ -143,11 +147,12 @@ export default function ServiceTicket() {
             const fetchDetails = async () => {
                 try {
                     const response = await fetch(
-                        `https://pickmeet-backend.onrender.com/pick-drop/all-holders/${watchCardHolderId}`
+                        `http://localhost:5000/pick-drop/all-holders/${watchCardHolderId}`
                     );
                     if (!response.ok) throw new Error("Failed to fetch card holder details");
                     const data = await response.json();
                     setCardHolderDetails({
+                        name: data.name || data.fullName || "Unknown",
                         card_number: data.card_number || data.cardNumber || "N/A",
                         mobile: data.mobile || data.phone || data.phoneNumber || "N/A",
                         email: data.email || "N/A",
@@ -173,12 +178,14 @@ export default function ServiceTicket() {
             const fetchDetails = async () => {
                 try {
                     const response = await fetch(
-                        `https://pickmeet-backend.onrender.com/merchant/${watchMerchantId}`
+                        `http://localhost:5000/merchant/${watchMerchantId}`
                     );
                     if (!response.ok) throw new Error("Failed to fetch merchant details");
                     const data = await response.json();
                     setMerchantDetails({
+                        name: data.name || "Unknown",
                         address: data.address || "N/A",
+                        mobile: data.mobile || data.phone || data.contactNumber || "N/A",
                         contactInfo: data.mobile || data.phone || data.contactNumber || "N/A",
                         service_charge: data.service_charge || "N/A",
                         co_name: data.co_name || "N/A",
@@ -254,6 +261,8 @@ export default function ServiceTicket() {
                 dropoffDateTime: data.dropoffDateTime,
                 pickupAddress: data.pickupAddress,
                 dropoffAddress: data.dropoffAddress,
+                meetAddress: data.meetAddress,
+                flightNumber: data.flightNumber,
                 specialInstructions: data.specialInstructions,
                 paymentStatus: data.paymentStatus,
                 ticketStatus: data.ticketStatus,
@@ -261,9 +270,8 @@ export default function ServiceTicket() {
                 serviceCharge,
                 createdAt: new Date().toISOString(),
             };
-            console.log("payload: ", payload);
             // Send to API
-            const response = await fetch("https://pickmeet-backend.onrender.com/register/service-ticket", {
+            const response = await fetch("http://localhost:5000/register/service-ticket", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload),
@@ -279,6 +287,53 @@ export default function ServiceTicket() {
                     icon: "success",
                     confirmButtonText: "Cool"
                 });
+                // Send SMS
+                const holderPhone = `+88${cardHolderDetails.mobile}`
+                const merchantPhone = `+88${merchantDetails.mobile}`
+                const smsRes = await fetch("http://localhost:5000/send-sms", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        to: holderPhone,
+                        message: `Hi ${cardHolderDetails.name}!
+Your Meet & Greet service ticket has been created successfully.
+
+Service Provider: ${merchantDetails.name}
+Contact: ${merchantDetails.mobile}
+
+Thank you!`,
+                    }),
+                });
+
+                // Send SMS to merchant
+                const merchantSmsRes = await fetch("http://localhost:5000/send-sms", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        to: merchantPhone,
+                        message: `Hi ${merchantDetails.name}!
+Your have received a new Meet & Greet service ticket.
+
+Card Holder: ${cardHolderDetails.name}
+Contact: ${cardHolderDetails.mobile}
+Meet-Up Address: ${data.meetAddress}
+Meet-Up Date & Time: ${data.pickupDateTime}
+
+Thank you!`,
+                    }),
+                });
+
+                const smsData = await smsRes.json();
+                const merchantSmsData = await merchantSmsRes.json();
+
+                if (!smsData.success) {
+                    console.error("SMS failed:", smsData.error);
+                }
+                if (!merchantSmsData.success) {
+                    console.error("Merchant SMS failed:", merchantSmsData.error);
+                }
+
+
             }
             reset();
             router.push("/meet-greet/all-service-tickets");
@@ -733,7 +788,7 @@ export default function ServiceTicket() {
                                     {/* Custom Pick-up Address */}
                                     <Grid item size={6}>
                                         <Controller
-                                            name="pickupAddress"
+                                            name="meetAddress"
                                             control={control}
                                             render={({ field }) => (
                                                 <TextField
@@ -743,6 +798,22 @@ export default function ServiceTicket() {
                                                     multiline
                                                     // rows={2}
                                                     placeholder="Street address, city, zip..."
+                                                />
+                                            )}
+                                        />
+                                    </Grid>
+                                    <Grid item size={12}>
+                                        <Controller
+                                            name="flightNumber"
+                                            control={control}
+                                            render={({ field }) => (
+                                                <TextField
+                                                    {...field}
+                                                    label="Enter Flight Number"
+                                                    fullWidth
+                                                    multiline
+                                                    // rows={2}
+                                                    placeholder="Flight number..."
                                                 />
                                             )}
                                         />

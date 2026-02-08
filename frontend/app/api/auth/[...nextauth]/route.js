@@ -10,7 +10,7 @@ export const authOptions = {
                 password: { label: "Password", type: "password" }
             },
             async authorize(credentials, req) {
-                const user = await fetch("https://pickmeet-backend.onrender.com/users")
+                const user = await fetch("http://localhost:5000/users")
                     .then(res => res.json())
                     .then(data => data.find(user => user.email === credentials.email && user.password === credentials.password));
                 if (user) {

@@ -12,11 +12,10 @@ import { signIn, signOut, useSession } from "next-auth/react";
 
 export default function Sidebar() {
     const session = useSession();
-    console.log(session);
     const [userProfile, setUserProfile] = useState(null);
     useEffect(() => {
         const fetchUserProfile = async () => {
-            const response = await fetch("https://pickmeet-backend.onrender.com/merchants");
+            const response = await fetch("http://localhost:5000/merchants");
             const data = await response.json();
             setUserProfile(data.find(merchant => merchant.userId === session?.data?.user?.id));
         };

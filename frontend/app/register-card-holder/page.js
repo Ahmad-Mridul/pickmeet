@@ -31,22 +31,6 @@ export default function CardHolder() {
 
         setIsLoading(true);
 
-        // const cardHolder = {
-        //     clientID: Number(clientID), // API expects Number
-        //     name,
-        //     mobile,
-        //     card_number,
-        //     card_type,
-        //     email,
-        //     address,
-        //     role: "customer"
-        // };
-        // const user = {
-        //     email: cardHolder.email,
-        //     password: "N/A",
-        //     role: "customer",
-        // }
-        // console.log("HI", user);
 
         try {
             const payload = {
@@ -56,7 +40,7 @@ export default function CardHolder() {
                 password: "N/A", role: "customer"
             };
 
-            const response = await fetch("https://pickmeet-backend.onrender.com/register/card-holder", {
+            const response = await fetch("http://localhost:5000/register/card-holder", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload),
@@ -97,7 +81,7 @@ export default function CardHolder() {
                     <h1 className="text-2xl font-bold text-gray-800">Manage Card Holders</h1>
                 </div>
                 <div>
-                    <Link href="/pick-drop/all-holders" className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                    <Link href="/all-holders" className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
                         View All Card Holders
                     </Link>
                 </div>

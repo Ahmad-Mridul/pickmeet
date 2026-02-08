@@ -11,8 +11,6 @@ generator client {
 datasource db {
   provider     = "postgresql"
   url          = env("DATABASE_URL")
-  directUrl    = env("DIRECT_URL")
-  relationMode = "prisma"
 }
 
 model User {
@@ -79,6 +77,7 @@ model ServiceTicket{
   pickupAddress String?
   dropoffAddress String?
   meetAddress String?
+  flightNumber String?
   specialInstructions String?
   paymentStatus String
   ticketStatus String

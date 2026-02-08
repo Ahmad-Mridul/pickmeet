@@ -102,7 +102,7 @@ export default function ServiceTicket() {
         const fetchCardHolders = async () => {
             try {
                 const response = await fetch(
-                    "https://pickmeet-backend.onrender.com/card-holders"
+                    "http://localhost:5000/card-holders"
                 );
                 if (!response.ok) throw new Error("Failed to fetch card holders");
                 const data = await response.json();
@@ -122,7 +122,7 @@ export default function ServiceTicket() {
     useEffect(() => {
         const fetchMerchants = async () => {
             try {
-                const response = await fetch("https://pickmeet-backend.onrender.com/merchants");
+                const response = await fetch("http://localhost:5000/merchants");
                 if (!response.ok) throw new Error("Failed to fetch merchants");
                 const data = await response.json();
                 if (Array.isArray(data)) {
@@ -144,7 +144,7 @@ export default function ServiceTicket() {
             const fetchDetails = async () => {
                 try {
                     const response = await fetch(
-                        `https://pickmeet-backend.onrender.com/pick-drop/all-holders/${watchCardHolderId}`
+                        `http://localhost:5000/pick-drop/all-holders/${watchCardHolderId}`
                     );
                     if (!response.ok) throw new Error("Failed to fetch card holder details");
                     const data = await response.json();
@@ -174,7 +174,7 @@ export default function ServiceTicket() {
             const fetchDetails = async () => {
                 try {
                     const response = await fetch(
-                        `https://pickmeet-backend.onrender.com/merchant/${watchMerchantId}`
+                        `http://localhost:5000/merchant/${watchMerchantId}`
                     );
                     if (!response.ok) throw new Error("Failed to fetch merchant details");
                     const data = await response.json();
@@ -262,9 +262,8 @@ export default function ServiceTicket() {
                 serviceCharge,
                 createdAt: new Date().toISOString(),
             };
-            console.log("payload: ", payload);
             // Send to API
-            const response = await fetch("https://pickmeet-backend.onrender.com/register/service-ticket", {
+            const response = await fetch("http://localhost:5000/register/service-ticket", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload),

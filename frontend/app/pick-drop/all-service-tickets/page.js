@@ -26,6 +26,13 @@ import {
     Divider,
     IconButton,
     InputAdornment,
+    TablePagination,
+    Select,
+    MenuItem,
+    FormControl,
+    InputLabel,
+    Autocomplete,
+    createFilterOptions,
 } from "@mui/material";
 import { ArrowLeft, Search, Eye, Download, Calendar, MapPin, CreditCard, Package, User, DollarSign, Clock, FileText, CheckCircle2, Mail, Phone } from "lucide-react";
 import { toast } from "sonner";
@@ -63,87 +70,84 @@ export default function AllServiceTickets() {
     const [selectedTicket, setSelectedTicket] = useState(null);
     const [openDetails, setOpenDetails] = useState(false);
     const [loadingTickets, setLoadingTickets] = useState(true);
+    const [page, setPage] = useState(0);
+    const [rowsPerPage, setRowsPerPage] = useState(10);
 
-    // Mock data - Replace with API call
-    const mockTickets = [
-        {
-            id: "TKT-001",
-            cardHolderName: "John Doe",
-            cardNumber: "****-****-****-1234",
-            merchantName: "ABC Dry Cleaning",
-            serviceName: "Dry Cleaning",
-            serviceCharge: 20.0,
-            pickupDateTime: "2024-01-18T10:00",
-            dropoffDateTime: "2024-01-18T14:00",
-            pickupAddress: "123 Main St, City",
-            specialInstructions: "Handle with care",
-            paymentStatus: "bill-to-card",
-            ticketStatus: "pending",
-            createdAt: "2024-01-18T09:00:00Z",
-        },
-        {
-            id: "TKT-002",
-            cardHolderName: "Jane Smith",
-            cardNumber: "****-****-****-5678",
-            merchantName: "XYZ Auto Repair",
-            serviceName: "Oil Change",
-            serviceCharge: 35.0,
-            pickupDateTime: "2024-01-18T09:00",
-            dropoffDateTime: "2024-01-18T11:00",
-            pickupAddress: "456 Oak Ave, City",
-            specialInstructions: "Check tire pressure too",
-            paymentStatus: "prepaid",
-            ticketStatus: "assigned",
-            createdAt: "2024-01-18T08:30:00Z",
-        },
-        {
-            id: "TKT-003",
-            cardHolderName: "Mike Johnson",
-            cardNumber: "****-****-****-9101",
-            merchantName: "Tech Repair Shop",
-            serviceName: "Screen Repair",
-            serviceCharge: 75.0,
-            pickupDateTime: "2024-01-17T15:00",
-            dropoffDateTime: "2024-01-17T17:00",
-            pickupAddress: "789 Pine Rd, City",
-            specialInstructions: "iPhone 13 screen",
-            paymentStatus: "pay-on-pickup",
-            ticketStatus: "delivered",
-            createdAt: "2024-01-17T14:00:00Z",
-        },
-    ];
+    // Filter State
+    const [merchants, setMerchants] = useState([]);
+    const [cardHolders, setCardHolders] = useState([]);
+    const [filterMerchant, setFilterMerchant] = useState("");
+    const [filterCardHolder, setFilterCardHolder] = useState("");
+    const [filterStatus, setFilterStatus] = useState("");
 
-    // Load tickets
+    const handleChangePage = (event, newPage) => {
+        setPage(newPage);
+    };
+
+    const handleChangeRowsPerPage = (event) => {
+        setRowsPerPage(parseInt(event.target.value, 10));
+        setPage(0);
+    };
+
+    // Load initial data
     useEffect(() => {
-        const fetchTickets = async () => {
+        const fetchData = async () => {
             try {
                 setLoadingTickets(true);
-                const response = await fetch("https://pickmeet-backend.onrender.com/service-tickets");
-                if (!response.ok) throw new Error("Failed to fetch tickets");
-                const data = await response.json();
-                setTickets(data);
-                setFilteredTickets(data);
+                const [ticketsRes, merchantsRes, holdersRes] = await Promise.all([
+                    fetch("http://localhost:5000/service-tickets"),
+                    fetch("http://localhost:5000/merchants"),
+                    fetch("http://localhost:5000/card-holders")
+                ]);
+
+                if (!ticketsRes.ok) throw new Error("Failed to fetch tickets");
+                const ticketsData = await ticketsRes.json();
+                setTickets(ticketsData);
+                setFilteredTickets(ticketsData);
+
+                if (merchantsRes.ok) setMerchants(await merchantsRes.json());
+                if (holdersRes.ok) setCardHolders(await holdersRes.json());
+
             } catch (err) {
-                toast.error("Error loading tickets", {
+                toast.error("Error loading data", {
                     description: err.message,
                 });
             } finally {
                 setLoadingTickets(false);
             }
         };
-        fetchTickets();
+        fetchData();
     }, []);
-    console.log("All tickets: ", tickets);
     // Handle search
+    // Handle filters
     useEffect(() => {
-        const filtered = tickets.filter(
-            (ticket) =>
-                ticket?.id ||
-                ticket?.cardHolder?.name ||
-                ticket?.merchant?.name
-        );
+        const lowerTerm = searchTerm.toLowerCase();
+        const filtered = tickets.filter((ticket) => {
+            // 1. Text Search
+            const matchesSearch = !searchTerm || (
+                ticket.id?.toString().includes(lowerTerm) ||
+                ticket.cardHolder?.name?.toLowerCase().includes(lowerTerm) ||
+                ticket.cardHolder?.email?.toLowerCase().includes(lowerTerm) ||
+                ticket.cardHolder?.mobile?.toLowerCase().includes(lowerTerm) ||
+                ticket.merchant?.name?.toLowerCase().includes(lowerTerm) ||
+                ticket.merchant?.email?.toLowerCase().includes(lowerTerm) ||
+                ticket.merchant?.mobile?.toLowerCase().includes(lowerTerm) ||
+                ticket.merchant?.co_name?.toLowerCase().includes(lowerTerm) ||
+                ticket.merchant?.co_email?.toLowerCase().includes(lowerTerm) ||
+                ticket.merchant?.co_mobile?.toLowerCase().includes(lowerTerm)
+            );
+
+            // 2. Dropdown Filters
+            const matchesMerchant = !filterMerchant || ticket.merchant?.id === filterMerchant;
+            const matchesCardHolder = !filterCardHolder || ticket.cardHolder?.clientID === filterCardHolder;
+            const matchesStatus = !filterStatus || ticket.ticketStatus?.toLowerCase() === filterStatus.toLowerCase();
+
+            return matchesSearch && matchesMerchant && matchesCardHolder && matchesStatus;
+        });
+
         setFilteredTickets(filtered);
-    }, [searchTerm, tickets]);
+        setPage(0); // Reset pagination on filter change
+    }, [searchTerm, filterMerchant, filterCardHolder, filterStatus, tickets]);
 
     // Format date
     const formatDate = (dateString) => {
@@ -159,7 +163,6 @@ export default function AllServiceTickets() {
     const handleViewDetails = (ticket) => {
         setSelectedTicket(ticket);
         setOpenDetails(true);
-        console.log("Selected ticket: ", ticket);
     };
 
     const handleCloseDetails = () => {
@@ -205,7 +208,7 @@ export default function AllServiceTickets() {
                             📋 Pick & Drop Service Tickets
                         </Typography>
                         <Typography variant="body2" sx={{ color: "gray", mt: 0.5 }}>
-                            Manage and track all service tickets
+                            Manage and track all pick & drop service tickets
                         </Typography>
                     </Box>
                 </Box>
@@ -241,35 +244,109 @@ export default function AllServiceTickets() {
                 </Box>
             </Box>
 
-            {/* Search Bar */}
-            <Box sx={{ mb: 3 }}>
-                <TextField
-                    fullWidth
-                    placeholder="Search by Ticket ID, Customer Name, or Merchant..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    variant="outlined"
-                    InputProps={{
-                        startAdornment: (
-                            <InputAdornment position="start">
-                                <Search size={20} color="gray" />
-                            </InputAdornment>
-                        ),
-                    }}
-                    sx={{
-                        backgroundColor: "white",
-                        borderRadius: 1,
-                        "& .MuiOutlinedInput-root": {
-                            "&:hover fieldset": {
-                                borderColor: "#667eea",
-                            },
-                            "&.Mui-focused fieldset": {
-                                borderColor: "#667eea",
-                            },
-                        },
-                    }}
-                />
-            </Box>
+            {/* Filters Section */}
+            <Paper sx={{ p: 3, mb: 3, borderRadius: 2 }}>
+                <Grid container spacing={2} alignItems="center">
+                    {/* Search Field */}
+                    <Grid item size={3}>
+                        <TextField
+                            fullWidth
+                            placeholder="Search (ID, Names, Emails, Mobiles)..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            size="small"
+                            InputProps={{
+                                startAdornment: (
+                                    <InputAdornment position="start">
+                                        <Search size={18} color="gray" />
+                                    </InputAdornment>
+                                ),
+                            }}
+                        />
+                    </Grid>
+
+                    {/* Merchant Filter */}
+                    <Grid item size={3}>
+                        <Autocomplete
+                            options={merchants}
+                            getOptionLabel={(option) => `${option.name} (${option.mobile})`}
+                            filterOptions={createFilterOptions({
+                                limit: 5,
+                                stringify: (option) => `${option.name} ${option.email} ${option.mobile} ${option.id}`,
+                            })}
+                            value={merchants.find(m => m.id === filterMerchant) || null}
+                            onChange={(event, newValue) => {
+                                setFilterMerchant(newValue ? newValue.id : "");
+                            }}
+                            renderInput={(params) => (
+                                <TextField {...params} label="Filter by Merchant" size="small" placeholder="Name, Email, Phone, ID" />
+                            )}
+                            renderOption={(props, option) => {
+                                const { key, ...otherProps } = props;
+                                return (
+                                    <li key={key} {...otherProps}>
+                                        <Box>
+                                            <Typography variant="body2" fontWeight="bold">{option.name}</Typography>
+                                            <Typography variant="caption" color="text.secondary">
+                                                {option.mobile} | {option.email}
+                                            </Typography>
+                                        </Box>
+                                    </li>
+                                )
+                            }}
+                        />
+                    </Grid>
+
+                    {/* CardHolder Filter */}
+                    <Grid item size={3}>
+                        <Autocomplete
+                            options={cardHolders}
+                            getOptionLabel={(option) => `${option.name} (${option.mobile})`}
+                            filterOptions={createFilterOptions({
+                                limit: 5,
+                                stringify: (option) => `${option.name} ${option.email} ${option.mobile} ${option.clientID}`,
+                            })}
+                            value={cardHolders.find(ch => ch.clientID === filterCardHolder) || null}
+                            onChange={(event, newValue) => {
+                                setFilterCardHolder(newValue ? newValue.clientID : "");
+                            }}
+                            renderInput={(params) => (
+                                <TextField {...params} label="Filter by CardHolder" size="small" placeholder="Name, Email, Phone, ID" />
+                            )}
+                            renderOption={(props, option) => {
+                                const { key, ...otherProps } = props;
+                                return (
+                                    <li key={key} {...otherProps}>
+                                        <Box>
+                                            <Typography variant="body2" fontWeight="bold">{option.name}</Typography>
+                                            <Typography variant="caption" color="text.secondary">
+                                                {option.mobile} | {option.email}
+                                            </Typography>
+                                        </Box>
+                                    </li>
+                                )
+                            }}
+                        />
+                    </Grid>
+
+                    {/* Status Filter */}
+                    <Grid item size={3}>
+                        <FormControl fullWidth size="small">
+                            <InputLabel>Status</InputLabel>
+                            <Select
+                                value={filterStatus}
+                                label="Status"
+                                onChange={(e) => setFilterStatus(e.target.value)}
+                            >
+                                <MenuItem value=""><em>All</em></MenuItem>
+                                <MenuItem value="pending">Pending</MenuItem>
+                                <MenuItem value="completed">Completed</MenuItem>
+                                <MenuItem value="cancelled">Cancelled</MenuItem>
+                            </Select>
+                        </FormControl>
+                    </Grid>
+                </Grid>
+            </Paper>
 
             {/* Tickets Table */}
             <Card sx={{ boxShadow: "0 2px 8px rgba(0,0,0,0.1)" }}>
@@ -284,12 +361,24 @@ export default function AllServiceTickets() {
                                     Customer
                                 </TableCell>
                                 <TableCell sx={{ fontWeight: "bold", color: "#333" }}>
+                                    Customer Mobile
+                                </TableCell>
+                                <TableCell sx={{ fontWeight: "bold", color: "#333" }}>
                                     Merchant
+                                </TableCell>
+                                <TableCell sx={{ fontWeight: "bold", color: "#333" }}>
+                                    Communication Officer
+                                </TableCell>
+                                <TableCell sx={{ fontWeight: "bold", color: "#333" }}>
+                                    Contact Merchant
                                 </TableCell>
 
 
                                 <TableCell sx={{ fontWeight: "bold", color: "#333" }}>
                                     Status
+                                </TableCell>
+                                <TableCell sx={{ fontWeight: "bold", color: "#333" }}>
+                                    Change Status
                                 </TableCell>
                                 {/* <TableCell sx={{ fontWeight: "bold", color: "#333" }}>
                                     Payment
@@ -300,33 +389,71 @@ export default function AllServiceTickets() {
                             </TableRow>
                         </TableHead>
                         <TableBody>
-                            {tickets.length > 0 ? (
-                                tickets.filter((ticket) => ticket.serviceType === "pick-and-drop").map((ticket) => (
-                                    <TableRow
-                                        key={ticket.id}
-                                        sx={{
-                                            "&:hover": { backgroundColor: "#f9f9f9" },
-                                            borderBottom: "1px solid #e0e0e0",
-                                        }}
-                                    >
-                                        <TableCell sx={{ fontWeight: 600, color: "#667eea" }}>
-                                            {ticket.id}
-                                        </TableCell>
-                                        <TableCell>{ticket.cardHolder.name}</TableCell>
-                                        <TableCell>{ticket.merchant.name}</TableCell>
-                                        {/* <TableCell>{ticket?.serviceName}</TableCell> */}
-                                        {/* <TableCell align="right" sx={{ fontWeight: 600 }}>
+                            {filteredTickets.length > 0 ? (
+                                filteredTickets
+                                    .filter((ticket) => ticket.serviceType === "pick-and-drop")
+                                    .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                                    .map((ticket) => (
+                                        <TableRow
+                                            key={ticket.id}
+                                            sx={{
+                                                "&:hover": { backgroundColor: "#f9f9f9" },
+                                                borderBottom: "1px solid #e0e0e0",
+                                            }}
+                                        >
+                                            <TableCell sx={{ fontWeight: 600, color: "#667eea" }}>
+                                                {ticket.id}
+                                            </TableCell>
+                                            <TableCell>{ticket.cardHolder.name}</TableCell>
+                                            <TableCell>{ticket.cardHolder.mobile}</TableCell>
+                                            <TableCell>{ticket.merchant.name}</TableCell>
+                                            <TableCell>{ticket.merchant.co_name}</TableCell>
+                                            <TableCell>{ticket.merchant.co_mobile}</TableCell>
+                                            {/* <TableCell>{ticket?.serviceName}</TableCell> */}
+                                            {/* <TableCell align="right" sx={{ fontWeight: 600 }}>
                                             ${ticket.serviceCharge.toFixed(2)}
                                         </TableCell> */}
-                                        <TableCell>
-                                            <Chip
-                                                label={getStatusLabel(ticket.ticketStatus)}
-                                                color={getStatusColor(ticket.ticketStatus)}
-                                                size="small"
-                                                variant="outlined"
-                                            />
-                                        </TableCell>
-                                        {/* <TableCell>
+                                            <TableCell>
+                                                <Chip
+                                                    label={getStatusLabel(ticket.ticketStatus)}
+                                                    color={getStatusColor(ticket.ticketStatus)}
+                                                    size="small"
+                                                    variant="outlined"
+                                                />
+                                            </TableCell>
+                                            <TableCell>
+                                                <select
+                                                    name="ticketStatus"
+                                                    className="border border-gray-300 px-2 py-1 rounded"
+                                                    value={ticket.ticketStatus}
+                                                    onChange={async (e) => {
+                                                        const newStatus = e.target.value;
+                                                        try {
+                                                            const response = await fetch(`http://localhost:5000/service-tickets/${ticket.id}`, {
+                                                                method: "PUT",
+                                                                headers: { "Content-Type": "application/json" },
+                                                                body: JSON.stringify({ ticketStatus: newStatus }),
+                                                            });
+                                                            if (!response.ok) throw new Error("Failed to update status");
+
+                                                            // Update local state
+                                                            const updatedTickets = tickets.map(t =>
+                                                                t.id === ticket.id ? { ...t, ticketStatus: newStatus } : t
+                                                            );
+                                                            setTickets(updatedTickets);
+                                                            setFilteredTickets(updatedTickets); // Also update filtered list to reflect immediately
+                                                            toast.success("Status updated to " + newStatus);
+                                                        } catch (err) {
+                                                            toast.error("Update failed", { description: err.message });
+                                                        }
+                                                    }}
+                                                >
+                                                    <option value="pending">Pending</option>
+                                                    <option value="completed">Completed</option>
+                                                    <option value="cancelled">Cancelled</option>
+                                                </select>
+                                            </TableCell>
+                                            {/* <TableCell>
                                             <Typography variant="caption" sx={{ fontWeight: 500 }}>
                                                 {ticket.paymentStatus === "prepaid"
                                                     ? "Pre-paid"
@@ -335,40 +462,40 @@ export default function AllServiceTickets() {
                                                     : "Bill to Card"}
                                             </Typography>
                                         </TableCell> */}
-                                        <TableCell align="center">
-                                            <Box sx={{ display: "flex", gap: 1, justifyContent: "center" }}>
-                                                <Button
-                                                    size="small"
-                                                    variant="outlined"
-                                                    startIcon={<Eye size={16} />}
-                                                    onClick={() => handleViewDetails(ticket)}
-                                                    sx={{
-                                                        textTransform: "none",
-                                                        color: "#667eea",
-                                                        borderColor: "#667eea",
-                                                        "&:hover": {
-                                                            backgroundColor: "#f0f3ff",
-                                                        },
-                                                    }}
-                                                >
-                                                    Details
-                                                </Button>
-                                                <Button
-                                                    size="small"
-                                                    variant="text"
-                                                    startIcon={<Download size={16} />}
-                                                    onClick={() => handleExportTicket(ticket)}
-                                                    sx={{
-                                                        textTransform: "none",
-                                                        color: "#666",
-                                                    }}
-                                                >
-                                                    Export
-                                                </Button>
-                                            </Box>
-                                        </TableCell>
-                                    </TableRow>
-                                ))
+                                            <TableCell align="center">
+                                                <Box sx={{ display: "flex", gap: 1, justifyContent: "center" }}>
+                                                    <Button
+                                                        size="small"
+                                                        variant="outlined"
+                                                        startIcon={<Eye size={16} />}
+                                                        onClick={() => handleViewDetails(ticket)}
+                                                        sx={{
+                                                            textTransform: "none",
+                                                            color: "#667eea",
+                                                            borderColor: "#667eea",
+                                                            "&:hover": {
+                                                                backgroundColor: "#f0f3ff",
+                                                            },
+                                                        }}
+                                                    >
+                                                        Details
+                                                    </Button>
+                                                    <Button
+                                                        size="small"
+                                                        variant="text"
+                                                        startIcon={<Download size={16} />}
+                                                        onClick={() => handleExportTicket(ticket)}
+                                                        sx={{
+                                                            textTransform: "none",
+                                                            color: "#666",
+                                                        }}
+                                                    >
+                                                        Export
+                                                    </Button>
+                                                </Box>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))
                             ) : (
                                 <TableRow>
                                     <TableCell colSpan={8} align="center" sx={{ py: 4 }}>
@@ -383,6 +510,15 @@ export default function AllServiceTickets() {
                         </TableBody>
                     </Table>
                 </TableContainer>
+                <TablePagination
+                    rowsPerPageOptions={[10, 20, 50, 100]}
+                    component="div"
+                    count={filteredTickets.filter((ticket) => ticket.serviceType === "pick-and-drop").length}
+                    rowsPerPage={rowsPerPage}
+                    page={page}
+                    onPageChange={handleChangePage}
+                    onRowsPerPageChange={handleChangeRowsPerPage}
+                />
             </Card>
 
             {/* Ticket Details Dialog */}

@@ -60,7 +60,7 @@ export default function CardHolderProfile() {
                 // Also inspected the list endpoint primarily.
                 // Optimistically trying /card-holders/${id} first, if fails, fallback?
                 // Based on merchant pattern, let's try direct fetch.
-                const response = await fetch(`https://pickmeet-backend.onrender.com/pick-drop/all-holders/${id}`);
+                const response = await fetch(`http://localhost:5000/pick-drop/all-holders/${id}`);
                 if (!response.ok) {
                     // Fallback check if it's because api structure is different
                     throw new Error("Failed to fetch card holder details");

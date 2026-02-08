@@ -1,11 +1,21 @@
 "use client";
+import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
-import { Search, ChevronLeft, ChevronRight, SquarePen, View } from "lucide-react";
+import { Search, ChevronLeft, ChevronRight, SquarePen, View, Edit, Delete, DeleteIcon, Trash } from "lucide-react";
 import Link from "next/link";
+import { Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField } from "@mui/material";
+import Swal from 'sweetalert2';
 
 export default function ExistingCardHolders() {
     const [cardHolders, setCardHolders] = useState([]);
     const [searchTerm, setSearchTerm] = useState("");
+    const [open, setOpen] = useState(false);
+    const [editingHolder, setEditingHolder] = useState(null);
+    const { data: session } = useSession();
+    const [deleteOpen, setDeleteOpen] = useState(false);
+    const [deleteId, setDeleteId] = useState(null);
+    const [adminPassword, setAdminPassword] = useState("");
+    const [isPasswordCorrect, setIsPasswordCorrect] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
 
@@ -13,7 +23,7 @@ export default function ExistingCardHolders() {
 
 
     useEffect(() => {
-        fetch("https://pickmeet-backend.onrender.com/card-holders")
+        fetch("http://localhost:5000/card-holders")
             .then(res => res.json())
             .then(data => {
                 if (Array.isArray(data)) {
@@ -58,6 +68,152 @@ export default function ExistingCardHolders() {
         if (newPage >= 1 && newPage <= totalPages) {
             setCurrentPage(newPage);
         }
+    };
+
+    const handleEdit = (id) => {
+        const holder = cardHolders.find(h => (h.clientID || h.cardHolderId || h.id) === id);
+        if (holder) {
+            setEditingHolder({
+                ...holder,
+                clientID: holder.clientID || holder.cardHolderId || holder.id
+            });
+            setOpen(true);
+        }
+    };
+
+    const handleClose = () => {
+        setOpen(false);
+        setEditingHolder(null);
+    };
+
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setEditingHolder(prev => ({
+            ...prev,
+            [name]: value
+        }));
+    };
+
+    const handleSave = () => {
+        if (!editingHolder) return;
+
+        fetch(`http://localhost:5000/card-holders/${editingHolder.clientID}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(editingHolder),
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.result) {
+                    Swal.fire({
+                        title: 'Success!',
+                        text: 'Card holder updated successfully',
+                        icon: 'success',
+                        confirmButtonText: 'Ok'
+                    });
+
+                    // Update local state
+                    const updatedHolders = cardHolders.map(h =>
+                        ((h.clientID || h.cardHolderId || h.id) === editingHolder.clientID) ? { ...h, ...editingHolder } : h
+                    );
+                    setCardHolders(updatedHolders);
+                    handleClose();
+                } else {
+                    Swal.fire({
+                        title: 'Error!',
+                        text: 'Failed to update card holder',
+                        icon: 'error',
+                        confirmButtonText: 'Ok'
+                    });
+                }
+            })
+            .catch(err => {
+                console.error("Update failed:", err);
+                Swal.fire({
+                    title: 'Error!',
+                    text: 'Something went wrong',
+                    icon: 'error',
+                    confirmButtonText: 'Ok'
+                });
+            });
+    };
+
+    const handleDeleteClick = (id) => {
+        setDeleteId(id);
+        setDeleteOpen(true);
+        setAdminPassword(""); // Reset password field
+        setIsPasswordCorrect(false); // Reset verification
+    };
+
+    const handlePasswordChange = (e) => {
+        const password = e.target.value;
+        setAdminPassword(password);
+
+        const userEmail = session?.user?.email;
+        if (!userEmail || !password) {
+            setIsPasswordCorrect(false);
+            return;
+        }
+
+        // Simple debounce could be added here if needed, but for now direct call or onBlur is fine.
+        // Let's do it on every change for better UX, but maybe check length > 0
+        fetch('http://localhost:5000/verify-password', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: userEmail, password })
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    setIsPasswordCorrect(true);
+                } else {
+                    setIsPasswordCorrect(false);
+                }
+            })
+            .catch(err => setIsPasswordCorrect(false));
+    };
+
+    const handleConfirmDelete = () => {
+        if (!isPasswordCorrect) return;
+
+        const userEmail = session?.user?.email; // Get logged-in user's email
+
+        if (!userEmail) {
+            Swal.fire('Error', 'You must be logged in to perform this action', 'error');
+            return;
+        }
+
+        fetch(`http://localhost:5000/card-holders/${deleteId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                password: adminPassword,
+                userEmail: userEmail
+            }),
+        })
+            .then(async res => {
+                const data = await res.json();
+                if (res.ok) {
+                    Swal.fire('Deleted!', 'Card holder has been deleted.', 'success');
+                    setCardHolders(prev => prev.filter(h => (h.clientID || h.cardHolderId || h.id) !== deleteId));
+                    setDeleteOpen(false);
+                } else {
+                    Swal.fire('Error', data.error || 'Failed to delete', 'error');
+                }
+            })
+            .catch(err => {
+                console.error("Delete failed:", err);
+                Swal.fire('Error', 'Something went wrong', 'error');
+            });
+    };
+
+    const handleDeleteClose = () => {
+        setDeleteOpen(false);
+        setDeleteId(null);
     };
 
     return (
@@ -113,10 +269,18 @@ export default function ExistingCardHolders() {
                                             <td className="px-6 py-4 text-gray-600">{data.mobile}</td>
                                             <td className="px-6 py-4 text-gray-600">{data.email}</td>
                                             <td className="px-6 py-4 font-mono text-gray-600 ">{data.card}</td>
-                                            <td className="px-6 py-4 flex items-center justify-center">
+                                            <td className="px-6 py-4 flex items-center justify-center gap-3">
                                                 <Link href={`/all-holders/${data.id}`}>
                                                     <View size={20} className="text-blue-600" />
                                                 </Link>
+                                                <button className="cursor-pointer btn btn-primary"
+                                                    onClick={() => handleEdit(data.id)}>
+                                                    <Edit size={20} className="text-blue-600" />
+                                                </button>
+                                                <button className="cursor-pointer btn btn-danger"
+                                                    onClick={() => handleDeleteClick(data.id)}>
+                                                    <Trash size={20} className="text-red-600" />
+                                                </button>
                                             </td>
                                         </tr>
                                     );
@@ -179,6 +343,91 @@ export default function ExistingCardHolders() {
                     </div>
                 )}
             </div>
+
+            {/* Edit Modal */}
+            <Dialog open={open} onClose={handleClose} fullWidth maxWidth="sm">
+                <DialogTitle>Edit Card Holder</DialogTitle>
+                <DialogContent>
+                    {editingHolder && (
+                        <div className="flex flex-col gap-4 mt-2">
+                            <TextField
+                                label="Full Name"
+                                name="name"
+                                value={editingHolder.name || ''}
+                                onChange={handleChange}
+                                fullWidth
+                            />
+                            <TextField
+                                label="Mobile"
+                                name="mobile"
+                                value={editingHolder.mobile || ''}
+                                onChange={handleChange}
+                                fullWidth
+                            />
+                            <TextField
+                                label="Email"
+                                name="email"
+                                value={editingHolder.email || ''}
+                                onChange={handleChange}
+                                fullWidth
+                            />
+                            <TextField
+                                label="Card Number"
+                                name="card_number"
+                                value={editingHolder.card_number || ''}
+                                onChange={handleChange}
+                                fullWidth
+                            />
+                            <TextField
+                                label="Address"
+                                name="address"
+                                value={editingHolder.address || ''}
+                                onChange={handleChange}
+                                fullWidth
+                                multiline
+                                rows={2}
+                            />
+                        </div>
+                    )}
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleClose} color="inherit">Cancel</Button>
+                    <Button onClick={handleSave} variant="contained" color="primary">Save Changes</Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* Delete Confirmation Modal */}
+            <Dialog open={deleteOpen} onClose={handleDeleteClose} fullWidth maxWidth="xs">
+                <DialogTitle>Confirm Delete</DialogTitle>
+                <DialogContent>
+                    <div className="flex flex-col gap-4 mt-2">
+                        <p className="text-sm text-gray-600">
+                            Are you sure you want to delete this card holder? This action cannot be undone.
+                            Please enter your password to confirm.
+                        </p>
+                        <TextField
+                            label="Password"
+                            type="password"
+                            value={adminPassword}
+                            onChange={handlePasswordChange}
+                            fullWidth
+                            error={adminPassword.length > 0 && !isPasswordCorrect}
+                            helperText={adminPassword.length > 0 && !isPasswordCorrect ? "Incorrect password" : ""}
+                        />
+                    </div>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleDeleteClose} color="inherit">Cancel</Button>
+                    <Button
+                        onClick={handleConfirmDelete}
+                        variant="contained"
+                        color="error"
+                        disabled={!isPasswordCorrect}
+                    >
+                        Delete
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </div>
 
     );
