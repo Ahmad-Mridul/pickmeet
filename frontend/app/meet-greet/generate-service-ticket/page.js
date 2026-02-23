@@ -248,7 +248,7 @@ export default function ServiceTicket() {
             ...merchant,
         }));
     }, [merchants]);
-
+    console.log("merchantDetails: ", merchantDetails);
     // Handle form submission
     const onSubmit = async (data) => {
         try {

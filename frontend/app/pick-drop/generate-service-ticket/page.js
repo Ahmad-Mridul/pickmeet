@@ -43,6 +43,7 @@ export default function ServiceTicket() {
     const [cardHolders, setCardHolders] = useState([]);
     const [selectedCardHolder, setSelectedCardHolder] = useState(null);
     const [cardHolderDetails, setCardHolderDetails] = useState({
+        name: "",
         card_number: "",
         mobile: "",
         email: "",
@@ -55,6 +56,8 @@ export default function ServiceTicket() {
     const [merchants, setMerchants] = useState([]);
     const [selectedMerchant, setSelectedMerchant] = useState(null);
     const [merchantDetails, setMerchantDetails] = useState({
+        name: "",
+        mobile: "",
         address: "",
         service_charge: "",
         co_name: "",
@@ -149,6 +152,7 @@ export default function ServiceTicket() {
                     if (!response.ok) throw new Error("Failed to fetch card holder details");
                     const data = await response.json();
                     setCardHolderDetails({
+                        name: data.name || data.fullName || "Unknown",
                         card_number: data.card_number || data.cardNumber || "N/A",
                         mobile: data.mobile || data.phone || data.phoneNumber || "N/A",
                         email: data.email || "N/A",
@@ -166,6 +170,7 @@ export default function ServiceTicket() {
             fetchDetails();
         }
     }, [watchCardHolderId, selectedCardHolder]);
+    console.log(cardHolderDetails.mobile);
 
     // Fetch merchant details and services when selected
     useEffect(() => {
@@ -179,7 +184,9 @@ export default function ServiceTicket() {
                     if (!response.ok) throw new Error("Failed to fetch merchant details");
                     const data = await response.json();
                     setMerchantDetails({
+                        name: data.name || "Unknown",
                         address: data.address || "N/A",
+                        mobile: data.mobile || data.phone || data.contactNumber || "N/A",
                         contactInfo: data.mobile || data.phone || data.contactNumber || "N/A",
                         service_charge: data.service_charge || "N/A",
                         co_name: data.co_name || "N/A",
@@ -208,7 +215,7 @@ export default function ServiceTicket() {
             fetchDetails();
         }
     }, [watchMerchantId, selectedMerchant]);
-
+    console.log(merchantDetails.co_mobile);
     // Update service charge when service is selected
     useEffect(() => {
         if (watchServiceId) {
@@ -242,7 +249,7 @@ export default function ServiceTicket() {
             ...merchant,
         }));
     }, [merchants]);
-
+    console.log(merchantDetails);
     // Handle form submission
     const onSubmit = async (data) => {
         try {
@@ -262,6 +269,7 @@ export default function ServiceTicket() {
                 serviceCharge,
                 createdAt: new Date().toISOString(),
             };
+            console.log(merchantDetails);
             // Send to API
             const response = await fetch("http://localhost:5000/register/service-ticket", {
                 method: "POST",
@@ -279,6 +287,53 @@ export default function ServiceTicket() {
                     icon: "success",
                     confirmButtonText: "Cool"
                 });
+                // Send SMS
+                const holderPhone = `+88${cardHolderDetails.mobile}`
+                const merchantPhone = `+88${merchantDetails.mobile}`
+                const smsRes = await fetch("http://localhost:5000/send-sms", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        to: holderPhone,
+                        message: `Hi ${cardHolderDetails.name}!
+Your Pick & Drop service ticket has been created successfully.
+
+Service Provider: ${merchantDetails.name}
+Contact: ${merchantDetails.mobile}
+
+Thank you!`,
+                    }),
+                });
+
+                // Send SMS to merchant
+                const merchantSmsRes = await fetch("http://localhost:5000/send-sms", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        to: merchantPhone,
+                        message: `Hi ${merchantDetails.name}!
+Your have received a new Pick & Drop service ticket.
+
+Card Holder: ${cardHolderDetails.name}
+Contact: ${cardHolderDetails.mobile}
+Pickup Address: ${data.pickupAddress}
+Dropoff Address: ${data.dropoffAddress}
+Pickup Date & Time: ${data.pickupDateTime}
+Dropoff Date & Time: ${data.dropoffDateTime}
+
+Thank you!`,
+                    }),
+                });
+
+                const smsData = await smsRes.json();
+                const merchantSmsData = await merchantSmsRes.json();
+
+                if (!smsData.success) {
+                    console.error("SMS failed:", smsData.error);
+                }
+                if (!merchantSmsData.success) {
+                    console.error("Merchant SMS failed:", merchantSmsData.error);
+                }
             }
             reset();
             router.push("/pick-drop/all-service-tickets");
