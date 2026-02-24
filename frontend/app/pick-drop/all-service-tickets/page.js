@@ -34,7 +34,7 @@ import {
     Autocomplete,
     createFilterOptions,
 } from "@mui/material";
-import { ArrowLeft, Search, Eye, Download, Calendar, MapPin, CreditCard, Package, User, DollarSign, Clock, FileText, CheckCircle2, Mail, Phone } from "lucide-react";
+import { ArrowLeft, Search, Eye, Calendar, MapPin, CreditCard, Package, User, DollarSign, Clock, FileText, CheckCircle2, Mail, Phone } from "lucide-react";
 import { toast } from "sonner";
 import { MobileFriendly } from "@mui/icons-material";
 
@@ -170,17 +170,7 @@ export default function AllServiceTickets() {
         setSelectedTicket(null);
     };
 
-    const handleExportTicket = (ticket) => {
-        const ticketData = JSON.stringify(ticket, null, 2);
-        const blob = new Blob([ticketData], { type: "application/json" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `${ticket.id}.json`;
-        a.click();
-        URL.revokeObjectURL(url);
-        toast.success("Ticket exported successfully");
-    };
+
     const pickDropTickets = tickets.filter((ticket) => ticket?.serviceType === "pick-and-drop");
     return (
         <Box sx={{ p: 3, maxWidth: "1400px", mx: "auto", backgroundColor: "#fafafa", minHeight: "100vh" }}>
@@ -480,18 +470,7 @@ export default function AllServiceTickets() {
                                                     >
                                                         Details
                                                     </Button>
-                                                    <Button
-                                                        size="small"
-                                                        variant="text"
-                                                        startIcon={<Download size={16} />}
-                                                        onClick={() => handleExportTicket(ticket)}
-                                                        sx={{
-                                                            textTransform: "none",
-                                                            color: "#666",
-                                                        }}
-                                                    >
-                                                        Export
-                                                    </Button>
+
                                                 </Box>
                                             </TableCell>
                                         </TableRow>

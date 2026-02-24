@@ -58,6 +58,7 @@ export default function ServiceTicket() {
     const [merchantDetails, setMerchantDetails] = useState({
         name: "",
         mobile: "",
+        contactInfo: "",
         address: "",
         service_charge: "",
         co_name: "",
@@ -287,6 +288,7 @@ export default function ServiceTicket() {
                     icon: "success",
                     confirmButtonText: "Cool"
                 });
+
                 // Send SMS
                 const holderPhone = `+88${cardHolderDetails.mobile}`
                 const merchantPhone = `+88${merchantDetails.mobile}`

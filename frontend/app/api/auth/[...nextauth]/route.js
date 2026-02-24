@@ -10,13 +10,19 @@ export const authOptions = {
                 password: { label: "Password", type: "password" }
             },
             async authorize(credentials, req) {
-                const user = await fetch("http://localhost:5000/users")
-                    .then(res => res.json())
-                    .then(data => data.find(user => user.email === credentials.email && user.password === credentials.password));
-                if (user) {
-                    return user
-                } else {
-                    return null
+                try {
+                    const res = await fetch("http://localhost:5000/users");
+                    if (!res.ok) return null;
+                    const data = await res.json();
+                    const user = data.find(user => user.email === credentials.email && user.password === credentials.password);
+                    if (user) {
+                        return user
+                    } else {
+                        return null
+                    }
+                } catch (error) {
+                    console.error("Auth Fetch Error:", error);
+                    return null;
                 }
             }
         })
@@ -41,7 +47,8 @@ export const authOptions = {
     },
     pages: {
         signIn: '/login',
-    }
+    },
+    secret: process.env.NEXTAUTH_SECRET,
 }
 const handler = NextAuth(authOptions)
 

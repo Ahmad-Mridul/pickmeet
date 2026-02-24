@@ -2,21 +2,21 @@ import { getToken } from "next-auth/jwt";
 import { NextResponse } from "next/server";
 
 export const middleware = async (req) => {
-    const token = await getToken({ req });
-    const isTokenOk = Boolean(token);
     const { pathname } = req.nextUrl;
 
-    // Exclude static files, next internals, login page, and api routes from protection
+    // Allow all API routes, static files, and the login page
     if (
+        pathname.startsWith("/api") ||
         pathname.startsWith("/_next") ||
         pathname.startsWith("/static") ||
         pathname.startsWith("/login") ||
-        pathname.startsWith("/api")
+        pathname === "/favicon.ico"
     ) {
         return NextResponse.next();
     }
 
-    if (!isTokenOk) {
+    const token = await getToken({ req });
+    if (!token) {
         return NextResponse.redirect(new URL('/login', req.url));
     }
 

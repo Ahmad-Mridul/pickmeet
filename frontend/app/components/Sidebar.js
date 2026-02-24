@@ -15,9 +15,17 @@ export default function Sidebar() {
     const [userProfile, setUserProfile] = useState(null);
     useEffect(() => {
         const fetchUserProfile = async () => {
-            const response = await fetch("http://localhost:5000/merchants");
-            const data = await response.json();
-            setUserProfile(data.find(merchant => merchant.userId === session?.data?.user?.id));
+            try {
+                const response = await fetch("http://localhost:5000/merchants");
+                if (!response.ok) return;
+                const contentType = response.headers.get("content-type");
+                if (contentType && contentType.includes("application/json")) {
+                    const data = await response.json();
+                    setUserProfile(data.find(merchant => merchant.userId === session?.data?.user?.id));
+                }
+            } catch (error) {
+                console.error("Sidebar Fetch Error:", error);
+            }
         };
         fetchUserProfile();
     }, [session]);

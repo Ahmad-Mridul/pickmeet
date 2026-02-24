@@ -10,6 +10,7 @@ const twilio = require("twilio");
 
 // const { PrismaClient } = require("./generated/prisma");
 const { PrismaClient } = require("@prisma/client");
+const sendMail = require('./sendMail');
 app.use(express.json());
 app.use(cors());
 
@@ -438,8 +439,62 @@ app.post("/register/service-ticket", async (req, res) => {
                 paymentStatus: paymentStatus || "Unpaid",
                 ticketStatus: ticketStatus || "pending",
                 serviceType: serviceType || "Unspecified"
+            },
+            include: {
+                cardHolder: true,
+                merchant: true
             }
-        })
+        });
+
+        // Send Email Notifications
+        try {
+            let specificDetails = "";
+            if (serviceTicket.serviceType === "meet-and-greet" || serviceTicket.serviceType === "greet-and-meet") {
+                specificDetails = `
+Meet-up Date & Time: ${serviceTicket.meetDateTime || 'N/A'}
+Meet-up Address: ${serviceTicket.meetAddress || 'N/A'}
+Flight Number: ${serviceTicket.flightNumber || 'N/A'}
+`;
+            } else {
+                specificDetails = `
+Pickup Date & Time: ${serviceTicket.pickupDateTime || 'N/A'}
+Dropoff Date & Time: ${serviceTicket.dropoffDateTime || 'N/A'}
+
+Pickup Address: ${serviceTicket.pickupAddress || 'N/A'}
+Dropoff Address: ${serviceTicket.dropoffAddress || 'N/A'}
+`;
+            }
+
+            const ticketDetails = `
+Service Ticket Details:
+----------------------
+Service Type: ${serviceTicket.serviceType}
+
+Card Holder: ${serviceTicket.cardHolder.name}
+Card Holder Mobile: ${serviceTicket.cardHolder.mobile}
+Merchant: ${serviceTicket.merchant.name}
+Merchant Mobile: ${serviceTicket.merchant.mobile}
+${specificDetails}
+Instructions: ${serviceTicket.specialInstructions || 'None'}
+`;
+
+            // To Card Holder
+            await sendMail(
+                serviceTicket.cardHolder.email,
+                `Ticket Created: ${serviceTicket.serviceType}`,
+                `Hi ${serviceTicket.cardHolder.name},\n\nYour service ticket has been created successfully.\n${ticketDetails}\n\nThank you!`
+            );
+
+            // To Merchant
+            await sendMail(
+                serviceTicket.merchant.email,
+                `New Service Ticket: ${serviceTicket.serviceType}`,
+                `Hi ${serviceTicket.merchant.name},\n\nYou have received a new service ticket.\n${ticketDetails}\n\nThank you!`
+            );
+        } catch (mailError) {
+            console.error("Failed to send notification emails:", mailError);
+        }
+
         res.status(200).json({ message: "Service ticket created successfully", serviceTicket });
     } catch (error) {
         res.status(500).json({ error: "Service ticket creation failed" });
