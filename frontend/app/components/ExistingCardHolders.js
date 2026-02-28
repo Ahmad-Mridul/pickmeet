@@ -42,7 +42,8 @@ export default function ExistingCardHolders() {
             name: holder.name || holder.fullName || "N/A",
             mobile: holder.mobile || holder.mobileNumber || holder.phone || "N/A",
             email: holder.email || "N/A",
-            card: holder.card_number || "N/A"
+            card: holder.card_number || "N/A",
+            service_limit: holder.service_limit ?? "N/A"
         };
     };
 
@@ -255,6 +256,7 @@ export default function ExistingCardHolders() {
                                 <th className="px-6 py-4 border-b border-gray-100">Mobile</th>
                                 <th className="px-6 py-4 border-b border-gray-100">Email</th>
                                 <th className="px-6 py-4 border-b border-gray-100">Card Number</th>
+                                <th className="px-6 py-4 border-b border-gray-100">Limits</th>
                                 <th className="px-6 py-4 border-b border-gray-100">Actions</th>
                             </tr>
                         </thead>
@@ -269,6 +271,7 @@ export default function ExistingCardHolders() {
                                             <td className="px-6 py-4 text-gray-600">{data.mobile}</td>
                                             <td className="px-6 py-4 text-gray-600">{data.email}</td>
                                             <td className="px-6 py-4 font-mono text-gray-600 ">{data.card}</td>
+                                            <td className="px-6 py-4 font-mono text-gray-600 ">{data.service_limit}</td>
                                             <td className="px-6 py-4 flex items-center justify-center gap-3">
                                                 <Link href={`/all-holders/${data.id}`}>
                                                     <View size={20} className="text-blue-600" />
