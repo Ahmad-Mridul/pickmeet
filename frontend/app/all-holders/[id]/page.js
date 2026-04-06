@@ -169,6 +169,38 @@ export default function CardHolderProfile() {
 
                         {/* Status / Officer */}
 
+                        {/* Service Limits */}
+                        <Card sx={{ boxShadow: 1, borderRadius: 2 }}>
+                            <CardContent>
+                                <Typography variant="h6" fontWeight="bold" sx={{ mb: 2 }}>Service Limits</Typography>
+                                <Box sx={{ display: 'flex', gap: 2 }}>
+                                    <Paper elevation={0} variant="outlined" sx={{ flex: 1, p: 2, textAlign: 'center', bgcolor: '#e3f2fd', borderColor: '#bbdefb' }}>
+                                        <Typography variant="h4" color="primary.main" fontWeight="bold">
+                                            {holder.pick_limit ?? 0}
+                                        </Typography>
+                                        <Typography variant="body2" color="text.secondary" fontWeight="medium">
+                                            Pick Limit
+                                        </Typography>
+                                    </Paper>
+                                    <Paper elevation={0} variant="outlined" sx={{ flex: 1, p: 2, textAlign: 'center', bgcolor: '#e8f5e9', borderColor: '#c8e6c9' }}>
+                                        <Typography variant="h4" color="success.main" fontWeight="bold">
+                                            {holder.meet_limit ?? 0}
+                                        </Typography>
+                                        <Typography variant="body2" color="text.secondary" fontWeight="medium">
+                                            Meet Limit
+                                        </Typography>
+                                    </Paper>
+                                    <Paper elevation={0} variant="outlined" sx={{ flex: 1, p: 2, textAlign: 'center', bgcolor: '#fff8e1', borderColor: '#ffecb3' }}>
+                                        <Typography variant="h4" color="warning.main" fontWeight="bold">
+                                            {holder.lounge_limit ?? 0}
+                                        </Typography>
+                                        <Typography variant="body2" color="text.secondary" fontWeight="medium">
+                                            Lounge Limit
+                                        </Typography>
+                                    </Paper>
+                                </Box>
+                            </CardContent>
+                        </Card>
 
                         {/* Recent Activity / Campaigns */}
                         <Card sx={{ boxShadow: 1, borderRadius: 2 }}>

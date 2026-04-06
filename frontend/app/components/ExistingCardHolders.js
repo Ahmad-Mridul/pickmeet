@@ -43,7 +43,10 @@ export default function ExistingCardHolders() {
             mobile: holder.mobile || holder.mobileNumber || holder.phone || "N/A",
             email: holder.email || "N/A",
             card: holder.card_number || "N/A",
-            service_limit: holder.service_limit ?? "N/A"
+            service_limit: holder.service_limit ?? "N/A",
+            pick_limit: holder.pick_limit ?? 0,
+            meet_limit: holder.meet_limit ?? 0,
+            lounge_limit: holder.lounge_limit ?? 0
         };
     };
 
@@ -236,7 +239,7 @@ export default function ExistingCardHolders() {
                         <input
                             type="text"
                             placeholder="Search ID, Mobile, Email..."
-                            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm transition-all shadow-sm"
+                            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm text-gray-500 transition-all shadow-sm"
                             value={searchTerm}
                             onChange={(e) => {
                                 setSearchTerm(e.target.value);
@@ -256,7 +259,8 @@ export default function ExistingCardHolders() {
                                 <th className="px-6 py-4 border-b border-gray-100">Mobile</th>
                                 <th className="px-6 py-4 border-b border-gray-100">Email</th>
                                 <th className="px-6 py-4 border-b border-gray-100">Card Number</th>
-                                <th className="px-6 py-4 border-b border-gray-100">Limits</th>
+                                <th className="px-6 py-4 border-b border-gray-100">Service Limit</th>
+                                {/* <th className="px-6 py-4 border-b border-gray-100">Limits</th> */}
                                 <th className="px-6 py-4 border-b border-gray-100">Actions</th>
                             </tr>
                         </thead>
@@ -264,6 +268,7 @@ export default function ExistingCardHolders() {
                             {currentData.length > 0 ? (
                                 currentData.map((holder, index) => {
                                     const data = getHolderData(holder);
+                                    console.log(holder);
                                     return (
                                         <tr key={index} className="hover:bg-blue-50/50 transition-colors border-b border-gray-50 last:border-0">
                                             <td className="px-6 py-4 font-medium text-blue-600">{data.id}</td>
@@ -271,7 +276,8 @@ export default function ExistingCardHolders() {
                                             <td className="px-6 py-4 text-gray-600">{data.mobile}</td>
                                             <td className="px-6 py-4 text-gray-600">{data.email}</td>
                                             <td className="px-6 py-4 font-mono text-gray-600 ">{data.card}</td>
-                                            <td className="px-6 py-4 font-mono text-gray-600 ">{data.service_limit}</td>
+                                            <td className="px-6 py-4 font-mono text-gray-600 ">{data.pick_limit}</td>
+                                            {/* <td className="px-6 py-4 font-mono text-gray-600 ">{data.service_limit}</td> */}
                                             <td className="px-6 py-4 flex items-center justify-center gap-3">
                                                 <Link href={`/all-holders/${data.id}`}>
                                                     <View size={20} className="text-blue-600" />

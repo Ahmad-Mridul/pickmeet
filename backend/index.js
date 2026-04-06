@@ -140,10 +140,10 @@ app.get("/pick-drop/all-holders/:id", async (req, res) => {
     res.send(cardHolder);
 });
 app.post("/register/card-holder", async (req, res) => {
-    let { clientID, name, mobile, card_number, card_type, service_limit, email, address, password, role } = req.body;
-    if (card_type === "platinum") {
-        service_limit = 6;
-    }
+    let { clientID, name, mobile, card_number, card_type, pick_limit, meet_limit, lounge_limit, email, address, password, role } = req.body;
+    // if (card_type === "platinum") {
+    //     service_limit = 6;
+    // }
     try {
         const result = await prisma.$transaction(async (tx) => {
             const newUser = await tx.user.create({
@@ -155,7 +155,7 @@ app.post("/register/card-holder", async (req, res) => {
             });
             const newCardHolder = await tx.cardHolder.create({
                 data: {
-                    clientID, name, mobile, card_number, card_type, service_limit, email, address, role,
+                    clientID, name, mobile, card_number, card_type, pick_limit, meet_limit, lounge_limit, email, address, role,
                     user: {
                         connect: {
                             id: newUser.id
@@ -167,13 +167,14 @@ app.post("/register/card-holder", async (req, res) => {
         })
         res.status(200).json({ message: "Registration successful", result });
     } catch (error) {
+        console.error("Registration failed:", error);
         res.status(500).json({ error: "Registration failed" });
     }
 });
 
 app.put("/card-holders/:id", async (req, res) => {
     const id = parseInt(req.params.id);
-    const { name, mobile, email, card_number, address } = req.body;
+    const { name, mobile, email, card_number, address, pick_limit, meet_limit, lounge_limit } = req.body;
 
     try {
         const updatedCardHolder = await prisma.cardHolder.update({
@@ -183,7 +184,10 @@ app.put("/card-holders/:id", async (req, res) => {
                 mobile,
                 email,
                 card_number,
-                address
+                address,
+                pick_limit,
+                meet_limit,
+                lounge_limit
             }
         });
         res.json({ message: "Card holder updated successfully", result: updatedCardHolder });

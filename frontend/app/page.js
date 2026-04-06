@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { MapPin, Users, Clock, CheckCircle, TrendingUp, AlertCircle, Tickets, MapPinned } from "lucide-react";
+import { MapPin, Users, Clock, CheckCircle, TrendingUp, AlertCircle, Tickets, MapPinned, Sofa } from "lucide-react";
 import { useEffect, useState } from "react";
 
 export default function Home() {
@@ -83,6 +83,18 @@ export default function Home() {
               </div>
               <h3 className="text-2xl font-bold text-gray-900 mb-2">Meet & Greet</h3>
               <p className="text-gray-500 max-w-sm">arrange a professional meet and greet service for VIPs and guests.</p>
+            </div>
+          </Link>
+          <Link href="/meet-greet" className="group relative overflow-hidden bg-white p-8 rounded-3xl shadow-md border border-gray-100 hover:shadow-xl transition-all duration-300">
+            <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity">
+              <Sofa size={120} className="text-purple-500 transform -rotate-12 group-hover:rotate-0 transition-transform duration-500" />
+            </div>
+            <div className="relative z-10">
+              <div className="p-4 bg-purple-50 w-fit rounded-2xl mb-4 group-hover:scale-110 transition-transform duration-300">
+                <Sofa size={32} className="text-purple-600" />
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">Lounge Access</h3>
+              <p className="text-gray-500 max-w-sm">arrange a professional lounge access service for card holders.</p>
             </div>
           </Link>
         </div>

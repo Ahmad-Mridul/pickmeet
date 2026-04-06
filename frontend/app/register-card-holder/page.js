@@ -11,7 +11,9 @@ export default function CardHolder() {
     const [mobile, setMobile] = useState("");
     const [card_number, setCardNumber] = useState("");
     const [card_type, setCardType] = useState("");
-    const [service_limit, setServiceLimit] = useState(0);
+    const [pickLimit, setPickLimit] = useState(0);
+    const [meetLimit, setMeetLimit] = useState(0);
+    const [loungeLimit, setLoungeLimit] = useState(0);
     const [email, setEmail] = useState("");
     const [address, setAddress] = useState("");
 
@@ -21,7 +23,9 @@ export default function CardHolder() {
     const handleSaveHolder = async (e) => {
         e.preventDefault();
         if (card_type === "platinum") {
-            setServiceLimit(6);
+            setPickLimit(2);
+            setMeetLimit(4);
+            setLoungeLimit(6);
         }
         // Basic validation
         if (!clientID || !name || !mobile || !card_number) {
@@ -35,9 +39,13 @@ export default function CardHolder() {
         try {
             const payload = {
                 // Card Holder data
-                clientID: Number(clientID), name, mobile, card_number, card_type, service_limit, email, address,
+                clientID: Number(clientID), name, mobile, card_number, card_type, 
+                pick_limit: card_type === "platinum" ? 2 : pickLimit, 
+                meet_limit: card_type === "platinum" ? 4 : meetLimit, 
+                lounge_limit: card_type === "platinum" ? 6 : loungeLimit, 
+                email, address,
                 // User data
-                password: "N/A", role: "customer"
+                password: "N/A", role: "card-holder"
             };
 
             const response = await fetch("http://localhost:5000/register/card-holder", {

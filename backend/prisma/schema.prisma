@@ -29,7 +29,9 @@ model CardHolder {
   mobile      String
   card_number String
   card_type   String
-  service_limit Int?
+  pick_limit  Int?
+  meet_limit  Int?
+  lounge_limit Int?
   email       String   @unique
   address     String
   role        String

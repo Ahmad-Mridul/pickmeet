@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@mui/material";
-import { Home, MapPin, Users, ChevronLeft, ChevronRight, ChevronDown, ChevronUp } from "lucide-react";
+import { Home, MapPin, Users, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Sofa } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -54,6 +54,16 @@ export default function Sidebar() {
                 { name: "Card Holder", href: "/all-holders" },
                 { name: "Merchant", href: "/all-merchants" },
                 { name: "Service Ticket", href: "/meet-greet/all-service-tickets" },
+            ]
+        },
+        {
+            name: "Lounge Access",
+            icon: Sofa,
+            href: "/lounge",
+            children: [
+                { name: "Card Holder", href: "/all-holders" },
+                { name: "Merchant", href: "/all-merchants" },
+                { name: "Lounge Request", href: "/lounge/all-service-tickets" },
             ]
         },
     ];
