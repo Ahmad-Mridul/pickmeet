@@ -135,6 +135,13 @@ app.get("/pick-drop/all-holders/:id", async (req, res) => {
     const cardHolder = await prisma.cardHolder.findUnique({
         where: {
             clientID: id
+        },
+        include: {
+            serviceTicket: {
+                include: {
+                    merchant: true
+                }
+            }
         }
     });
     res.send(cardHolder);

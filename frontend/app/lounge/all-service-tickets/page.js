@@ -17,32 +17,57 @@ export default function CreateService() {
         getCardHolders();
     }, [selectedHolder?.lounge_limit]);
     const handldeBook = () => {
-        if (selectedHolder?.lounge_limit > 0) {
-            fetch(`http://localhost:5000/card-holders/${selectedHolder.clientID}`, {
-                method: "PUT",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    ...selectedHolder,
-                    lounge_limit: selectedHolder.lounge_limit - 1
-                }),
-            })
-                .then((res) => {
-                    if (res.ok) {
-                        Swal.fire({
-                            title: "Booked successfully",
-                            // text: "You clicked the button!",
-                            icon: "success"
+        Swal.fire({
+            title: "Take Lounge Service?",
+            text: "This will consume 1 lounge limit from the card holder's account.",
+            icon: "question",
+            showCancelButton: true,
+            confirmButtonColor: "#3085d6",
+            cancelButtonColor: "#d33",
+            confirmButtonText: "Yes, book it!"
+        }).then((result) => {
+            if (result.isConfirmed) {
+                if (selectedHolder?.lounge_limit > 0) {
+                    fetch(`http://localhost:5000/card-holders/${selectedHolder.clientID}`, {
+                        method: "PUT",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({
+                            ...selectedHolder,
+                            lounge_limit: selectedHolder.lounge_limit - 1
+                        }),
+                    })
+                        .then((res) => {
+                            if (res.ok) {
+                                Swal.fire({
+                                    title: "Booked successfully!",
+                                    text: "The service ticket has been created.",
+                                    icon: "success"
+                                });
+                                return res.json();
+                            }
+                            throw new Error("Failed to book service");
+                        })
+                        .then((data) => {
+                            setSelectedHolder({ ...data.result, availEntertainment: (selectedHolder.availEntertainment || 0) + 1 });
+                        })
+                        .catch((error) => {
+                            Swal.fire({
+                                title: "Error",
+                                text: error.message,
+                                icon: "error"
+                            });
                         });
-                        return res.json();
-                    }
-                    throw new Error("Failed to book service");
-                })
-                .then((data) => {
-                    setSelectedHolder({ ...data.result, availEntertainment: (selectedHolder.availEntertainment || 0) + 1 });
-                })
-        }
+                } else {
+                    Swal.fire({
+                        title: "No Available Limits",
+                        text: "This card holder has exhausted all free lounge limits.",
+                        icon: "error"
+                    });
+                }
+            }
+        });
     }
     return (
         <div className="p-4 sm:p-6 lg:p-8 font-sans">
@@ -100,7 +125,7 @@ export default function CreateService() {
                                 )}
                                 {selectedHolder?.lounge_limit > 0
                                     &&
-                                    <button className="bg-blue-500 p-2 rounded cursor-pointer text-white" onClick={handldeBook}>Book Free Service</button>
+                                    <button className="bg-blue-500 p-2 rounded cursor-pointer text-white hover:bg-blue-700 duration-800" onClick={handldeBook}>Book Free Service</button>
                                     // :
                                     // <button className="btn bg-red-600 border-0" onClick={handldeBook}>Book Paid Service</button>
                                 }

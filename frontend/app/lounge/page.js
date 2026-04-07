@@ -27,26 +27,8 @@ const Lounge = () => {
             hover: "hover:shadow-blue-200"
         },
         {
-            title: "View All Merchants",
-            description: "View All Merchants.",
-            icon: CreditCard,
-            href: "/all-merchants",
-            color: "text-blue-600",
-            bg: "bg-blue-50",
-            hover: "hover:shadow-blue-200"
-        },
-        {
-            title: "Add Merchant",
-            description: "Onboard a new merchant partner to the platform.",
-            icon: Store,
-            href: "/register-merchant",
-            color: "text-purple-600",
-            bg: "bg-purple-50",
-            hover: "hover:shadow-purple-200"
-        },
-        {
-            title: "Create Service Ticket",
-            description: "Raise a new support or service ticket.",
+            title: "Take lounge service",
+            description: "Take lounge service.",
             icon: Ticket,
             href: "/lounge/all-service-tickets",
             color: "text-green-600",

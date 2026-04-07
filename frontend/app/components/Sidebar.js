@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@mui/material";
-import { Home, MapPin, Users, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Sofa } from "lucide-react";
+import { Home, MapPin, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Sofa, Store, Users } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -36,13 +36,13 @@ export default function Sidebar() {
 
     const menuItems = [
         { name: "Home", icon: Home, href: "/" },
+        { name: "Card Holder", icon: Users, href: "/all-holders" },
+        { name: "Merchant", icon: Store, href: "/all-merchants" },
         {
             name: "Pick & Drop",
             icon: MapPin,
             href: "/pick-drop",
             children: [
-                { name: "Card Holder", href: "/all-holders" },
-                { name: "Merchant", href: "/all-merchants" },
                 { name: "Service Ticket", href: "/pick-drop/all-service-tickets" },
             ]
         },
@@ -51,8 +51,6 @@ export default function Sidebar() {
             icon: Users,
             href: "/meet-greet",
             children: [
-                { name: "Card Holder", href: "/all-holders" },
-                { name: "Merchant", href: "/all-merchants" },
                 { name: "Service Ticket", href: "/meet-greet/all-service-tickets" },
             ]
         },
@@ -61,8 +59,6 @@ export default function Sidebar() {
             icon: Sofa,
             href: "/lounge",
             children: [
-                { name: "Card Holder", href: "/all-holders" },
-                { name: "Merchant", href: "/all-merchants" },
                 { name: "Lounge Request", href: "/lounge/all-service-tickets" },
             ]
         },

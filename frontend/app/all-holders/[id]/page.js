@@ -46,12 +46,6 @@ export default function CardHolderProfile() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    // Mock campaigns data for design purposes
-    const campaigns = [
-        { code: "ZZ18QWLL", customer: "SIBLI SADIK RONY", points: 10000, amount: "₹2500", status: "Claimed", expiry: "3/2/2026" },
-        { code: "3C95VLZ6", customer: "Zafirul Islam", points: 12000, amount: "₹3000", status: "Available", expiry: "3/2/2026" },
-    ];
-
     useEffect(() => {
         const fetchHolder = async () => {
             if (!id) return;
@@ -214,37 +208,58 @@ export default function CardHolderProfile() {
                                     <Table>
                                         <TableHead>
                                             <TableRow>
-                                                <TableCell>Reward Code</TableCell>
-                                                <TableCell>Customer</TableCell>
-                                                <TableCell>Points</TableCell>
-                                                <TableCell>Amount</TableCell>
+                                                <TableCell>Type</TableCell>
+                                                <TableCell>Merchant</TableCell>
+                                                <TableCell>Date & Time</TableCell>
+                                                <TableCell>Payment</TableCell>
                                                 <TableCell>Status</TableCell>
-                                                <TableCell>Expiry</TableCell>
+                                                <TableCell>Created At</TableCell>
                                             </TableRow>
                                         </TableHead>
                                         <TableBody>
-                                            {campaigns.map((row, index) => (
-                                                <TableRow key={index}>
-                                                    <TableCell>{row.code}</TableCell>
-                                                    <TableCell>
-                                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                                            <PersonIcon fontSize="small" color="action" />
-                                                            {row.customer}
-                                                        </Box>
+                                            {holder.serviceTicket && holder.serviceTicket.length > 0 ? (
+                                                holder.serviceTicket.map((ticket, index) => (
+                                                    <TableRow key={index}>
+                                                        <TableCell>
+                                                            <Chip label={ticket.serviceType || "Unknown"} size="small" color="info" variant="outlined" />
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                                <StoreIcon fontSize="small" color="action" />
+                                                                {ticket.merchant?.name || "Unknown"}
+                                                            </Box>
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            {ticket.pickupDateTime ? new Date(ticket.pickupDateTime).toLocaleString() : 
+                                                             (ticket.meetDateTime ? new Date(ticket.meetDateTime).toLocaleString() : "N/A")}
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <Chip
+                                                                label={ticket.paymentStatus || "unpaid"}
+                                                                size="small"
+                                                                color={(ticket.paymentStatus || "").toLowerCase() === 'paid' ? 'success' : 'default'}
+                                                            />
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <Chip
+                                                                label={ticket.ticketStatus || "pending"}
+                                                                size="small"
+                                                                variant="outlined"
+                                                                color={(ticket.ticketStatus || "").toLowerCase() === 'pending' ? 'warning' : 'primary'}
+                                                            />
+                                                        </TableCell>
+                                                        <TableCell>{new Date(ticket.createdAt).toLocaleDateString()}</TableCell>
+                                                    </TableRow>
+                                                ))
+                                            ) : (
+                                                <TableRow>
+                                                    <TableCell colSpan={6} align="center">
+                                                        <Typography variant="body2" color="text.secondary" sx={{ py: 2 }}>
+                                                            No service history found.
+                                                        </Typography>
                                                     </TableCell>
-                                                    <TableCell>{row.points}</TableCell>
-                                                    <TableCell>{row.amount}</TableCell>
-                                                    <TableCell>
-                                                        <Chip
-                                                            label={row.status}
-                                                            size="small"
-                                                            variant="outlined"
-                                                            color={row.status === 'Claimed' ? 'primary' : 'success'}
-                                                        />
-                                                    </TableCell>
-                                                    <TableCell>{row.expiry}</TableCell>
                                                 </TableRow>
-                                            ))}
+                                            )}
                                         </TableBody>
                                     </Table>
                                 </TableContainer>

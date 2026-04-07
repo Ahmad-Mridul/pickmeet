@@ -159,6 +159,7 @@ export default function ServiceTicket() {
                         email: data.email || "N/A",
                         card_type: data.card_type || data.cardType || "N/A",
                         address: data.address || "N/A",
+                        pick_limit: data.pick_limit ?? 0,
                     });
                 } catch (err) {
                     toast.error("Error fetching card holder details", {
@@ -282,6 +283,17 @@ export default function ServiceTicket() {
                 const errorData = await response.json();
                 throw new Error(errorData.error || "Failed to create service ticket");
             } else {
+                if (cardHolderDetails.pick_limit > 0) {
+                    await fetch(`http://localhost:5000/card-holders/${watchCardHolderId}`, {
+                        method: "PUT",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            ...selectedCardHolder,
+                            pick_limit: cardHolderDetails.pick_limit - 1
+                        })
+                    });
+                }
+                
                 Swal.fire({
                     title: "Success!",
                     text: "Service has been created successfully.",
@@ -532,6 +544,27 @@ Thank you!`,
                                             }}
                                         />
                                     </Grid>
+                                    
+                                    {/* Alert for 0 limit */}
+                                    {selectedCardHolder && cardHolderDetails.pick_limit === 0 && (
+                                        <Grid item size={12}>
+                                            <div className="mt-2 p-5 rounded-xl border-2 border-red-500 bg-red-50 shadow-[0_4px_20px_rgba(239,68,68,0.3)] relative overflow-hidden flex items-start gap-4">
+                                                <div className="absolute top-0 right-0 w-32 h-32 bg-red-500 opacity-10 rounded-full blur-2xl transform translate-x-1/3 -translate-y-1/2"></div>
+                                                <div className="bg-red-100 p-3 rounded-full flex-shrink-0 relative z-10">
+                                                    <AlertCircle size={32} className="text-red-600 animate-pulse" />
+                                                </div>
+                                                <div className="relative z-10">
+                                                    <h3 className="text-xl font-black text-red-700 uppercase tracking-wider mb-1">
+                                                        ACCESS DENIED
+                                                    </h3>
+                                                    <p className="text-red-800 font-medium">
+                                                        This card holder has <strong className="text-red-900 border-b-2 border-red-900">0</strong> service limits remaining. The system is locked and free services cannot be booked.
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </Grid>
+                                    )}
+
                                 </Grid>
                             </CardContent>
                         </Card>
@@ -915,15 +948,16 @@ Thank you!`,
                             <Button
                                 type="submit"
                                 variant="contained"
+                                disabled={selectedCardHolder && cardHolderDetails.pick_limit === 0}
                                 sx={{
                                     px: 4,
                                     textTransform: "none",
                                     fontWeight: 600,
-                                    background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-                                    boxShadow: "0 4px 12px rgba(102, 126, 234, 0.4)",
+                                    background: selectedCardHolder && cardHolderDetails.pick_limit === 0 ? "#ccc" : "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                                    boxShadow: selectedCardHolder && cardHolderDetails.pick_limit === 0 ? "none" : "0 4px 12px rgba(102, 126, 234, 0.4)",
                                     "&:hover": {
-                                        boxShadow: "0 6px 16px rgba(102, 126, 234, 0.6)",
-                                        background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                                        boxShadow: selectedCardHolder && cardHolderDetails.pick_limit === 0 ? "none" : "0 6px 16px rgba(102, 126, 234, 0.6)",
+                                        background: selectedCardHolder && cardHolderDetails.pick_limit === 0 ? "#ccc" : "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
                                     },
                                 }}
                             >
